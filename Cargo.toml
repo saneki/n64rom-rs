@@ -1,8 +1,6 @@
 [workspace]
 members = [
     "cargo-n64",
-    "examples/n64lib",
-    "examples/hello-ipl3font",
 ]
 
 [profile.release]

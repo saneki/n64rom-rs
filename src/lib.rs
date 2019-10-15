@@ -4,5 +4,5 @@
 #![feature(wrapping_int_impl)]
 #![warn(rust_2018_idioms)]
 
-mod header;
-mod ipl3;
+pub mod header;
+pub mod ipl3;

@@ -1,5 +1,8 @@
+use std::fmt::{self, Display, Formatter};
 use std::io::{self, Cursor};
 use std::io::prelude::*;
+use std::str::{self, Utf8Error};
+use std::string::FromUtf8Error;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::ipl3::IPL3;
@@ -29,6 +32,26 @@ pub struct N64Header {
     cart_id: [u8; 2],
     region_code: u8,
     _reserved_3: u8,
+}
+
+impl fmt::Display for N64Header {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut builder = Vec::<String>::new();
+        let name = self.name().unwrap_or("<???>");
+        let region_id = self.region_id_as_str().unwrap_or(String::from("????"));
+        builder.push(format!("N64 ROM Header: {}", name));
+        builder.push(String::from("  Device:"));
+        builder.push(format!("    Latency:             0x{:02X}", self.device_latency));
+        builder.push(format!("    RW Pulse Width:      0x{:02X}", self.device_rw_pulse_width));
+        builder.push(format!("    Page Size:           0x{:02X}", self.device_page_size));
+        builder.push(format!("    RW Release Duration: 0x{:02X}", self.device_rw_release_duration));
+        builder.push(format!("  Checksums: 0x{:08X} 0x{:08X}", self.crc1, self.crc2));
+        builder.push(format!("  Region: {}", region_id));
+        builder.push(format!("    Manufacturer: {}", self.manufacturer as char));
+        builder.push(format!("    Cart ID:      {}{}", self.cart_id[0] as char, self.cart_id[1] as char));
+        builder.push(format!("    Region Code:  {}", self.region_code as char));
+        write!(f, "{}", builder.join("\n"))
+    }
 }
 
 impl N64Header {
@@ -98,6 +121,27 @@ impl N64Header {
         };
 
         Ok(header)
+    }
+
+    pub fn name(&self) -> Result<&str, Utf8Error> {
+        str::from_utf8(&self.name)
+    }
+
+    pub fn fill_region_id(&self, region_id: &mut [u8; 4]) {
+        region_id[0] = self.manufacturer;
+        region_id[1] = self.cart_id[0];
+        region_id[2] = self.cart_id[1];
+        region_id[3] = self.region_code;
+    }
+
+    pub fn region_id(&self) -> Vec<u8> {
+        let mut region_id = [0u8; 4];
+        self.fill_region_id(&mut region_id);
+        region_id.to_vec()
+    }
+
+    pub fn region_id_as_str(&self) -> Result<String, FromUtf8Error> {
+        String::from_utf8(self.region_id())
     }
 
     pub fn new(

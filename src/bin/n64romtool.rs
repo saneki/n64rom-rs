@@ -18,5 +18,10 @@ fn main() -> Result<(), Box<Error>> {
         N64Header::read(&mut file)
     };
 
+    match header {
+        Ok(header) => println!("{}", header),
+        Err(_) => println!("Error reading file")
+    }
+
     Ok(())
 }

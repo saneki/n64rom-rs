@@ -9,8 +9,8 @@ use std::path::Path;
 use crc32fast::Hasher;
 use failure::Fail;
 
-crate const IPL_SIZE: usize = 0x0fc0;
-crate const PROGRAM_SIZE: usize = 1024 * 1024;
+pub const IPL_SIZE: usize = 0x0fc0;
+pub const PROGRAM_SIZE: usize = 1024 * 1024;
 
 #[derive(Debug, Fail)]
 pub enum IPL3Error {
@@ -28,7 +28,7 @@ impl From<io::Error> for IPL3Error {
 }
 
 /// IPL3 definitions.
-crate enum IPL3 {
+pub enum IPL3 {
     Cic6101([u8; IPL_SIZE]),
     Cic6102([u8; IPL_SIZE]),
     Cic6103([u8; IPL_SIZE]),
@@ -60,7 +60,7 @@ impl fmt::Debug for IPL3 {
 }
 
 impl IPL3 {
-    crate fn read(path: impl AsRef<Path>) -> Result<IPL3, IPL3Error> {
+    pub fn read(path: impl AsRef<Path>) -> Result<IPL3, IPL3Error> {
         // TODO
         let mut f = File::open(path)?;
 
@@ -94,7 +94,7 @@ impl IPL3 {
         Ok(ipl3)
     }
 
-    crate fn get_ipl(&self) -> &[u8; IPL_SIZE] {
+    pub fn get_ipl(&self) -> &[u8; IPL_SIZE] {
         match self {
             IPL3::Cic6101(bin) => bin,
             IPL3::Cic6102(bin) => bin,
@@ -106,7 +106,7 @@ impl IPL3 {
         }
     }
 
-    crate fn compute_crcs(&self, program: &[u8], fs: &[u8]) -> (u32, u32) {
+    pub fn compute_crcs(&self, program: &[u8], fs: &[u8]) -> (u32, u32) {
         let padding_length = (2 - (program.len() & 1)) & 1;
         let padding = [0; 1];
         let program = program
@@ -191,7 +191,7 @@ impl IPL3 {
     }
 
     /// Offset the entry point for the current IPL3
-    crate fn offset(&self, entry_point: u32) -> u32 {
+    pub fn offset(&self, entry_point: u32) -> u32 {
         entry_point
             + match self {
                 IPL3::Cic6103(_) => 0x0010_0000,

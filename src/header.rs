@@ -1,4 +1,6 @@
-use byteorder::{BigEndian, WriteBytesExt};
+use std::io::{self, Cursor};
+use std::io::prelude::*;
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::ipl3::IPL3;
 
@@ -30,6 +32,74 @@ pub struct N64Header {
 }
 
 impl N64Header {
+    pub fn from_bytes(bytes: &[u8]) -> io::Result<N64Header> {
+        let mut cursor = Cursor::new(&bytes);
+        Self::read(&mut cursor)
+    }
+
+    pub fn read<T>(reader: &mut T) -> io::Result<N64Header>
+    where
+        T: Read,
+    {
+        let device_latency = reader.read_u8()?;
+        let device_rw_pulse_width = reader.read_u8()?;
+        let device_page_size = reader.read_u8()?;
+        let device_rw_release_duration = reader.read_u8()?;
+        let clock_rate = reader.read_u32::<BigEndian>()?;
+        let entry_point = reader.read_u32::<BigEndian>()?;
+        let release = reader.read_u32::<BigEndian>()?;
+
+        let crc1 = reader.read_u32::<BigEndian>()?;
+        let crc2 = reader.read_u32::<BigEndian>()?;
+
+        let mut _reserved_1 = [0u8; 8];
+        reader.read_exact(&mut _reserved_1)?;
+        let _reserved_1 = _reserved_1;
+
+        let mut name = [0u8; 20];
+        reader.read_exact(&mut name)?;
+        let name = name;
+
+        let mut _reserved_2 = [0u8; 7];
+        reader.read_exact(&mut _reserved_2)?;
+        let _reserved_2 = _reserved_2;
+
+        let manufacturer = reader.read_u8()?;
+
+        let mut cart_id = [0u8; 2];
+        reader.read_exact(&mut cart_id)?;
+        let cart_id = cart_id;
+
+        let region_code = reader.read_u8()?;
+        let _reserved_3 = reader.read_u8()?;
+
+        let header = N64Header {
+            // 0x00
+            device_latency,
+            device_rw_pulse_width,
+            device_page_size,
+            device_rw_release_duration,
+            clock_rate,
+            entry_point,
+            release,
+
+            // 0x10
+            crc1,
+            crc2,
+            _reserved_1,
+
+            // 0x20
+            name,
+            _reserved_2,
+            manufacturer,
+            cart_id,
+            region_code,
+            _reserved_3,
+        };
+
+        Ok(header)
+    }
+
     pub fn new(
         entry_point: u32,
         name_str: &str,

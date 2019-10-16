@@ -1,10 +1,11 @@
-use std::fmt::{self, Display, Formatter};
+use std::fmt;
 use std::io::{self, Cursor};
 use std::io::prelude::*;
 use std::str::{self, Utf8Error};
 use std::string::FromUtf8Error;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
+use crate::io::{Endianness, Reader};
 use crate::ipl3::IPL3;
 
 pub const HEADER_SIZE: usize = 0x40;
@@ -55,12 +56,40 @@ impl fmt::Display for N64Header {
 }
 
 impl N64Header {
+    pub fn infer_endianness(bytes: &[u8]) -> Endianness
+    {
+        let mut cursor = Cursor::new(bytes);
+        let value = cursor.read_u32::<BigEndian>().unwrap();
+        match value {
+            0x8037_1240 => Endianness::Big,
+            0x4012_3780 => Endianness::Little,
+            0x3780_4012 => Endianness::Mixed,
+            // Default to Big Endian?
+            _ => Endianness::Big,
+        }
+    }
+
     pub fn from_bytes(bytes: &[u8]) -> io::Result<N64Header> {
         let mut cursor = Cursor::new(&bytes);
         Self::read(&mut cursor)
     }
 
     pub fn read<T>(reader: &mut T) -> io::Result<N64Header>
+    where
+        T: Read,
+    {
+        let mut buf = [0u8; 0x40];
+        reader.read_exact(&mut buf)?;
+        let buf = buf;
+
+        let endianness = N64Header::infer_endianness(&buf[..4]);
+        let mut cursor = Cursor::new(buf.to_vec());
+        let mut reader = Reader::from(&mut cursor, endianness);
+        N64Header::read_raw(&mut reader)
+    }
+
+    /// Read without checking for endianness.
+    pub fn read_raw<T>(reader: &mut T) -> io::Result<N64Header>
     where
         T: Read,
     {

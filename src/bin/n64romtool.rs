@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<Error>> {
 
     match header {
         Ok(header) => println!("{}", header),
-        Err(_) => println!("Error reading file")
+        Err(e) => println!("Error reading file: {}", e)
     }
 
     Ok(())

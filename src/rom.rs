@@ -20,7 +20,7 @@ impl fmt::Display for Rom {
         let mut builder = Vec::<String>::new();
         builder.push(format!("{}", self.header));
         builder.push(format!("IPL3: {}", self.ipl3));
-        builder.push(format!("Byte Order: {}", self.order.to_string()));
+        builder.push(format!("Byte Order: {}", self.order));
         builder.push(format!("Full Length: 0x{:08X}", self.len()));
         write!(f, "{}", builder.join("\n"))
     }

@@ -1,3 +1,5 @@
+use std::fmt;
+
 pub fn swap_bytes<T>(buf: &mut [u8]) where T: Swap {
     T::swap(buf)
 }
@@ -57,12 +59,12 @@ pub enum Endianness {
     Mixed,
 }
 
-impl ToString for Endianness {
-    fn to_string(&self) -> String {
+impl fmt::Display for Endianness {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Endianness::Big => String::from("Big Endian"),
-            Endianness::Little => String::from("Little Endian"),
-            Endianness::Mixed => String::from("Mixed"),
+            Endianness::Big => write!(f, "Big Endian"),
+            Endianness::Little => write!(f, "Little Endian"),
+            Endianness::Mixed => write!(f, "Mixed"),
         }
     }
 }

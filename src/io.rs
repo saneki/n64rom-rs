@@ -38,7 +38,7 @@ pub struct Reader<'r, T>
 where
     T: Read,
 {
-    buffer: [u8; BUFFER_SIZE],
+    buffer: Box<[u8; BUFFER_SIZE]>,
     endianness: Endianness,
     idx: usize,
     length: usize,
@@ -51,7 +51,7 @@ where
 {
     pub fn from(reader: &'r mut T, endianness: &Endianness) -> Self {
         Self {
-            buffer: [0; BUFFER_SIZE],
+            buffer: box[0; BUFFER_SIZE],
             endianness: *endianness,
             idx: 0,
             length: 0,
@@ -68,7 +68,7 @@ where
 
     /// Refill the contents of the buffer and reset the index to 0.
     fn refill(&mut self) -> Result<usize> {
-        let length = self.reader.read(&mut self.buffer)?;
+        let length = self.reader.read(&mut *self.buffer)?;
         self.endianness.swap(&mut self.buffer[..length]);
         self.idx = 0;
         self.length = length;

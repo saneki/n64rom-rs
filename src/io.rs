@@ -86,8 +86,8 @@ where
     T: Read,
 {
     fn read(&mut self, mut buf: &mut [u8]) -> Result<usize> {
-        let mut length = buf.len();
-        let mut wlength = 0;
+        let length = buf.len();
+        let mut written = 0;
 
         if self.remaining() == 0 {
             self.refill()?;
@@ -95,32 +95,24 @@ where
 
         loop {
             let remaining = self.remaining();
-            if length <= remaining {
+            if (length - written) <= remaining {
                 // Final write from buffer
-                let data = self.buf_read(length);
-                let written = buf.write(data)?;
-
-                // Update remaining length and write length
-                // length = length - written;
-                wlength = wlength + written;
-
+                let data = self.buf_read(length - written);
+                let wrote = buf.write(data)?;
+                written = written + wrote;
                 break;
             } else {
                 // Write the remaining data, and refresh buffer
                 let data = self.buf_read(remaining);
-                let written = buf.write(data)?;
+                let wrote = buf.write(data)?;
+                written = written + wrote;
 
-                // Update remaining length and write length
-                length = length - written;
-                wlength = wlength + written;
-
-                let amt = self.refill()?;
-                if amt == 0 {
+                if self.refill()? == 0 {
                     break;
                 }
             }
         }
 
-        Ok(wlength)
+        Ok(written)
     }
 }

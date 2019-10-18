@@ -27,6 +27,13 @@ impl fmt::Display for Rom {
 }
 
 impl Rom {
+    pub fn check_crc(&self) -> (bool, (u32, u32)) {
+        let crcs = self.header.crcs();
+        let calc = self.ipl3.compute_crcs(&self.data, &[]);
+        let result = crcs.0 == calc.0 && crcs.1 == calc.1;
+        (result, calc)
+    }
+
     pub fn read<T>(mut reader: &mut T) -> Result<Rom, HeaderError>
     where
         T: Read,

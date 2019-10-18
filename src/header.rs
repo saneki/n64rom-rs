@@ -144,6 +144,10 @@ impl fmt::Display for N64Header {
 }
 
 impl N64Header {
+    pub fn crcs(&self) -> (u32, u32) {
+        (self.crc1, self.crc2)
+    }
+
     pub fn from_bytes(bytes: &[u8]) -> Result<(N64Header, Endianness), HeaderError> {
         let mut cursor = Cursor::new(&bytes);
         Self::read(&mut cursor)

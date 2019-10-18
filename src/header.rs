@@ -4,19 +4,111 @@ use std::io::prelude::*;
 use std::str::{self, Utf8Error};
 use std::string::FromUtf8Error;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use failure::Fail;
 
 use crate::io::{Endianness, Reader};
 use crate::ipl3::IPL3;
 
 pub const HEADER_SIZE: usize = 0x40;
+pub const MAGIC_SIZE: usize = 4;
 
-#[derive(Debug, Clone, Copy)]
-pub struct N64Header {
-    // 0x00
+#[derive(Debug, Fail)]
+pub enum HeaderError {
+    #[fail(display = "IO Error")]
+    IOError(#[cause] io::Error),
+
+    #[fail(display = "Unknown byte order from magic: {}", _0)]
+    UnknownByteOrder(u32),
+}
+
+impl From<io::Error> for HeaderError {
+    fn from(e: io::Error) -> Self {
+        HeaderError::IOError(e)
+    }
+}
+
+/// Represents the initial four bytes of the rom header.
+///
+/// This value is often used to infer the byte order of the rom data.
+pub struct Magic {
     device_latency: u8,             // PI_BSD_DOM1_LAT_REG
     device_rw_pulse_width: u8,      // PI_BSD_DOM1_PWD_REG
     device_page_size: u8,           // PI_BSD_DOM1_PGS_REG
     device_rw_release_duration: u8, // PI_BSD_DOM1_RLS_REG
+}
+
+impl fmt::Display for Magic {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let order = self.infer_endianness();
+        match order {
+            Ok(Endianness::Big) => write!(f, "Big Endian"),
+            Ok(Endianness::Little) => write!(f, "Little Endian"),
+            Ok(Endianness::Mixed) => write!(f, "Mixed Endian"),
+            Err(HeaderError::UnknownByteOrder(val)) => {
+                write!(f, "Unknown (0x{:08X})", val)
+            }
+            _ => write!(f, "Unknown"),
+        }
+    }
+}
+
+impl Magic {
+    /// Infer the byte order (endianness) of the following data.
+    ///
+    /// If Little or Mixed endianness, will need to read properly.
+    pub fn infer_endianness(&self) -> Result<Endianness, HeaderError>
+    {
+        let value = self.to_u32();
+        match value {
+            0x8037_1240 => Ok(Endianness::Big),
+            0x4012_3780 => Ok(Endianness::Little),
+            0x3780_4012 => Ok(Endianness::Mixed),
+            _ => Err(HeaderError::UnknownByteOrder(value)),
+        }
+    }
+
+    /// Whether or not this value matches what is "expected".
+    ///
+    /// If we are reading the file correctly, it should match the BigEndian value.
+    pub fn is_expected(&self) -> bool {
+        let endianness = self.infer_endianness();
+        match endianness {
+            Ok(Endianness::Big) => true,
+            _ => false,
+        }
+    }
+
+    /// Construct using at least 4 bytes.
+    pub fn from(bytes: &[u8]) -> Self {
+        Self {
+            device_latency: bytes[0],
+            device_rw_pulse_width: bytes[1],
+            device_page_size: bytes[2],
+            device_rw_release_duration: bytes[3],
+        }
+    }
+
+    /// Convert to 4 bytes.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        vec![
+            self.device_latency,
+            self.device_rw_pulse_width,
+            self.device_page_size,
+            self.device_rw_release_duration,
+        ]
+    }
+
+    /// Convert to a `u32` value.
+    pub fn to_u32(&self) -> u32 {
+        let bytes = self.to_bytes();
+        let mut cursor = Cursor::new(bytes);
+        cursor.read_u32::<BigEndian>().unwrap()
+    }
+}
+
+pub struct N64Header {
+    // 0x00
+    magic: Magic,
     clock_rate: u32,                // Unused by IPL and OS
     entry_point: u32,               // Executable start address/entry point
     release: u32,                   // Unused by IPL and OS
@@ -41,11 +133,6 @@ impl fmt::Display for N64Header {
         let name = self.name().unwrap_or("<???>");
         let region_id = self.region_id_as_str().unwrap_or(String::from("????"));
         builder.push(format!("N64 ROM Header: {}", name));
-        builder.push(String::from("  Device:"));
-        builder.push(format!("    Latency:             0x{:02X}", self.device_latency));
-        builder.push(format!("    RW Pulse Width:      0x{:02X}", self.device_rw_pulse_width));
-        builder.push(format!("    Page Size:           0x{:02X}", self.device_page_size));
-        builder.push(format!("    RW Release Duration: 0x{:02X}", self.device_rw_release_duration));
         builder.push(format!("  Checksums: 0x{:08X} 0x{:08X}", self.crc1, self.crc2));
         builder.push(format!("  Region: {}", region_id));
         builder.push(format!("    Manufacturer: {}", self.manufacturer as char));
@@ -56,36 +143,26 @@ impl fmt::Display for N64Header {
 }
 
 impl N64Header {
-    pub fn infer_endianness(bytes: &[u8]) -> Endianness
-    {
-        let mut cursor = Cursor::new(bytes);
-        let value = cursor.read_u32::<BigEndian>().unwrap();
-        match value {
-            0x8037_1240 => Endianness::Big,
-            0x4012_3780 => Endianness::Little,
-            0x3780_4012 => Endianness::Mixed,
-            // Default to Big Endian?
-            _ => Endianness::Big,
-        }
-    }
-
-    pub fn from_bytes(bytes: &[u8]) -> io::Result<N64Header> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<(N64Header, Endianness), HeaderError> {
         let mut cursor = Cursor::new(&bytes);
         Self::read(&mut cursor)
     }
 
-    pub fn read<T>(reader: &mut T) -> io::Result<N64Header>
+    pub fn read<'a, T>(reader: &'a mut T) -> Result<(N64Header, Endianness), HeaderError>
     where
         T: Read,
     {
-        let mut buf = [0u8; 0x40];
+        let mut buf = [0u8; HEADER_SIZE];
         reader.read_exact(&mut buf)?;
         let buf = buf;
 
-        let endianness = N64Header::infer_endianness(&buf[..4]);
+        let magic = Magic::from(&buf[..MAGIC_SIZE]);
+        let order = magic.infer_endianness()?;
+
         let mut cursor = Cursor::new(buf.to_vec());
-        let mut reader = Reader::from(&mut cursor, endianness);
-        N64Header::read_raw(&mut reader)
+        let mut reader = Reader::from(&mut cursor, &order);
+        let header = N64Header::read_raw(&mut reader)?;
+        Ok((header, order))
     }
 
     /// Read without checking for endianness.
@@ -93,10 +170,10 @@ impl N64Header {
     where
         T: Read,
     {
-        let device_latency = reader.read_u8()?;
-        let device_rw_pulse_width = reader.read_u8()?;
-        let device_page_size = reader.read_u8()?;
-        let device_rw_release_duration = reader.read_u8()?;
+        let mut magic = [0u8; 4];
+        reader.read_exact(&mut magic)?;
+        let magic = Magic::from(&magic);
+
         let clock_rate = reader.read_u32::<BigEndian>()?;
         let entry_point = reader.read_u32::<BigEndian>()?;
         let release = reader.read_u32::<BigEndian>()?;
@@ -127,10 +204,7 @@ impl N64Header {
 
         let header = N64Header {
             // 0x00
-            device_latency,
-            device_rw_pulse_width,
-            device_page_size,
-            device_rw_release_duration,
+            magic,
             clock_rate,
             entry_point,
             release,
@@ -193,12 +267,16 @@ impl N64Header {
         cart_id.copy_from_slice(cart_id_str);
         let cart_id = cart_id;
 
-        N64Header {
-            // 0x00
+        let magic = Magic {
             device_latency: 128,
             device_rw_pulse_width: 55,
             device_page_size: 18,
             device_rw_release_duration: 64,
+        };
+
+        N64Header {
+            // 0x00
+            magic,
             clock_rate: 15,
             entry_point,
             release: 0,
@@ -222,10 +300,7 @@ impl N64Header {
         let mut buffer = Vec::new();
 
         // 0x00
-        buffer.push(self.device_latency);
-        buffer.push(self.device_rw_pulse_width);
-        buffer.push(self.device_page_size);
-        buffer.push(self.device_rw_release_duration);
+        buffer.extend_from_slice(&self.magic.to_bytes());
         buffer.write_u32::<BigEndian>(self.clock_rate).unwrap();
         buffer.write_u32::<BigEndian>(self.entry_point).unwrap();
         buffer.write_u32::<BigEndian>(self.release).unwrap();

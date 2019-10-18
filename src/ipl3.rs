@@ -60,23 +60,13 @@ impl fmt::Debug for IPL3 {
 }
 
 impl IPL3 {
-    pub fn read(path: impl AsRef<Path>) -> Result<IPL3, IPL3Error> {
-        // TODO
-        let mut f = File::open(path)?;
-
-        // Check the file size
-        let metadata = f.metadata()?;
-        let len = metadata.len();
-        if len as usize != IPL_SIZE {
-            Err(IPL3Error::IPL3ReadError(format!(
-                "Expected file size {}, found {}",
-                IPL_SIZE, len
-            )))?;
-        }
-
+    pub fn read<T>(reader: &mut T) -> io::Result<IPL3>
+    where
+        T: Read,
+    {
         // Read file contents
         let mut ipl = [0; IPL_SIZE];
-        f.read_exact(&mut ipl)?;
+        reader.read_exact(&mut ipl)?;
 
         // Check for known IPLs
         let mut hasher = Hasher::new();
@@ -90,6 +80,25 @@ impl IPL3 {
             0x009e_9ea3 => IPL3::Cic7102(ipl),
             _ => IPL3::Unknown(ipl),
         };
+
+        Ok(ipl3)
+    }
+
+    pub fn read_path(path: impl AsRef<Path>) -> Result<IPL3, IPL3Error> {
+        // TODO
+        let mut f = File::open(path)?;
+
+        // Check the file size
+        let metadata = f.metadata()?;
+        let len = metadata.len();
+        if len as usize != IPL_SIZE {
+            Err(IPL3Error::IPL3ReadError(format!(
+                "Expected file size {}, found {}",
+                IPL_SIZE, len
+            )))?;
+        }
+
+        let ipl3 = IPL3::read(&mut f)?;
 
         Ok(ipl3)
     }

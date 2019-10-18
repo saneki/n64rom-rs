@@ -2,7 +2,7 @@ use clap::{App, Arg};
 use std::error::Error;
 use std::fs::File;
 use std::path::Path;
-use n64rom::header::N64Header;
+use n64rom::rom::Rom;
 
 fn main() -> Result<(), Box<Error>> {
     let matches = App::new("n64romtool")
@@ -13,13 +13,13 @@ fn main() -> Result<(), Box<Error>> {
         .get_matches();
 
     let in_path = Path::new(matches.value_of("FILE").unwrap());
-    let header = {
+    let rom = {
         let mut file = File::open(in_path)?;
-        N64Header::read(&mut file)
+        Rom::read(&mut file)
     };
 
-    match header {
-        Ok(header) => println!("{}", header),
+    match rom {
+        Ok(rom) => println!("{}", rom),
         Err(e) => println!("Error reading file: {}", e)
     }
 

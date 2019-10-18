@@ -8,3 +8,4 @@ pub mod bytes;
 pub mod header;
 pub mod io;
 pub mod ipl3;
+pub mod rom;

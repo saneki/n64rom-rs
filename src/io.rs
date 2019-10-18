@@ -5,6 +5,7 @@ use crate::bytes::{self, BigEndian, LittleEndian, Mixed};
 // Todo: Assert compile-time check of divisible-by-4
 const BUFFER_SIZE: usize = 4096;
 
+#[derive(Clone, Copy)]
 /// Convenience wrapper enum around the separate Swap endianness enums.
 pub enum Endianness {
     Big,
@@ -48,10 +49,10 @@ impl<'r, T> Reader<'r, T>
 where
     T: Read,
 {
-    pub fn from(reader: &'r mut T, endianness: Endianness) -> Self {
+    pub fn from(reader: &'r mut T, endianness: &Endianness) -> Self {
         Self {
             buffer: [0; BUFFER_SIZE],
-            endianness,
+            endianness: *endianness,
             idx: 0,
             length: 0,
             reader,

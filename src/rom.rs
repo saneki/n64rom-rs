@@ -21,14 +21,14 @@ impl fmt::Display for Rom {
         let filesize = FileSize::from(self.len(), MEBIBYTE);
         let mut builder = Vec::<String>::new();
         builder.push(format!("{}", self.header));
-        builder.push(format!("IPL3: {}", self.ipl3));
-        builder.push(format!("Byte Order: {}", self.order));
+        builder.push(format!("  IPL3: {}", self.ipl3));
+        builder.push(format!("  Byte Order: {}", self.order));
         match filesize {
             FileSize::Float(value) => {
-                builder.push(format!("Full Length: {:.*} MiB", 1, value));
+                builder.push(format!("  Rom Size: {:.*} MiB", 1, value));
             }
             FileSize::Int(value) => {
-                builder.push(format!("Full Length: {} MiB", value));
+                builder.push(format!("  Rom Size: {} MiB", value));
             }
         }
         write!(f, "{}", builder.join("\n"))

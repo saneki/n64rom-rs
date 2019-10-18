@@ -3,7 +3,7 @@ use std::string::ToString;
 use crate::bytes::{self, BigEndian, LittleEndian, Mixed};
 
 // Todo: Assert compile-time check of divisible-by-4
-const BUFFER_SIZE: usize = 4096;
+const BUFFER_SIZE: usize = 1024 * 16;
 
 #[derive(Clone, Copy)]
 /// Convenience wrapper enum around the separate Swap endianness enums.

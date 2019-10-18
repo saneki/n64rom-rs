@@ -48,3 +48,32 @@ impl Swap for Mixed {
         }
     }
 }
+
+#[derive(Clone, Copy)]
+/// Convenience wrapper enum around the separate Swap endianness enums.
+pub enum Endianness {
+    Big,
+    Little,
+    Mixed,
+}
+
+impl ToString for Endianness {
+    fn to_string(&self) -> String {
+        match self {
+            Endianness::Big => String::from("Big Endian"),
+            Endianness::Little => String::from("Little Endian"),
+            Endianness::Mixed => String::from("Mixed"),
+        }
+    }
+}
+
+/// Wrapper implementation around the separate Swap endianness enums.
+impl Endianness {
+    pub fn swap(&self, buf: &mut [u8]) {
+        match self {
+            Endianness::Big => swap_bytes::<BigEndian>(buf),
+            Endianness::Little => swap_bytes::<LittleEndian>(buf),
+            Endianness::Mixed => swap_bytes::<Mixed>(buf),
+        }
+    }
+}

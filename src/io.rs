@@ -1,38 +1,8 @@
 use std::io::{Read, Result, Write};
-use std::string::ToString;
-use crate::bytes::{self, BigEndian, LittleEndian, Mixed};
+use crate::bytes::Endianness;
 
 // Todo: Assert compile-time check of divisible-by-4
 const BUFFER_SIZE: usize = 1024 * 16;
-
-#[derive(Clone, Copy)]
-/// Convenience wrapper enum around the separate Swap endianness enums.
-pub enum Endianness {
-    Big,
-    Little,
-    Mixed,
-}
-
-impl ToString for Endianness {
-    fn to_string(&self) -> String {
-        match self {
-            Endianness::Big => String::from("Big Endian"),
-            Endianness::Little => String::from("Little Endian"),
-            Endianness::Mixed => String::from("Mixed"),
-        }
-    }
-}
-
-/// Wrapper implementation around the separate Swap endianness enums.
-impl Endianness {
-    fn swap(&self, buf: &mut [u8]) {
-        match self {
-            Endianness::Big => bytes::swap_bytes::<BigEndian>(buf),
-            Endianness::Little => bytes::swap_bytes::<LittleEndian>(buf),
-            Endianness::Mixed => bytes::swap_bytes::<Mixed>(buf),
-        }
-    }
-}
 
 pub struct Reader<'r, T>
 where

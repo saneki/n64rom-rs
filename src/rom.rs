@@ -1,8 +1,9 @@
 use std::fmt;
 use std::io::Read;
 
+use crate::bytes::Endianness;
 use crate::header::{HeaderError, N64Header, HEADER_SIZE};
-use crate::io::{Endianness, Reader};
+use crate::io::Reader;
 use crate::ipl3::{IPL3, IPL_SIZE};
 
 pub struct Rom {

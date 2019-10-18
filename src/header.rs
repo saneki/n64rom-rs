@@ -6,7 +6,8 @@ use std::string::FromUtf8Error;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use failure::Fail;
 
-use crate::io::{Endianness, Reader};
+use crate::bytes::Endianness;
+use crate::io::Reader;
 use crate::ipl3::IPL3;
 
 pub const HEADER_SIZE: usize = 0x40;

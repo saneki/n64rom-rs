@@ -1,7 +1,7 @@
 [package]
 name = "n64rom"
 version = "0.0.1"
-authors = ["Jay Oster <jay@kodewerx.org>"]
+authors = ["saneki <s@neki.me>", "Jay Oster <jay@kodewerx.org>"]
 repository = "https://github.com/saneki/n64rom-rs"
 description = "Library & tools for working with Nintendo 64 ROMs"
 license = "MIT"

@@ -5,6 +5,7 @@ use crate::bytes::Endianness;
 use crate::header::{HeaderError, N64Header, HEADER_SIZE};
 use crate::io::Reader;
 use crate::ipl3::{IPL3, IPL_SIZE};
+use crate::util::{FileSize, MEBIBYTE};
 
 pub struct Rom {
     header: N64Header,
@@ -17,11 +18,19 @@ pub struct Rom {
 
 impl fmt::Display for Rom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let filesize = FileSize::from(self.len(), MEBIBYTE);
         let mut builder = Vec::<String>::new();
         builder.push(format!("{}", self.header));
         builder.push(format!("IPL3: {}", self.ipl3));
         builder.push(format!("Byte Order: {}", self.order));
-        builder.push(format!("Full Length: 0x{:08X}", self.len()));
+        match filesize {
+            FileSize::Float(value) => {
+                builder.push(format!("Full Length: {:.*} MiB", 1, value));
+            }
+            FileSize::Int(value) => {
+                builder.push(format!("Full Length: {} MiB", value));
+            }
+        }
         write!(f, "{}", builder.join("\n"))
     }
 }

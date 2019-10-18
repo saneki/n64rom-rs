@@ -62,9 +62,9 @@ pub enum Endianness {
 impl fmt::Display for Endianness {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Endianness::Big => write!(f, "Big Endian"),
-            Endianness::Little => write!(f, "Little Endian"),
-            Endianness::Mixed => write!(f, "Mixed"),
+            Self::Big => write!(f, "Big Endian"),
+            Self::Little => write!(f, "Little Endian"),
+            Self::Mixed => write!(f, "Mixed"),
         }
     }
 }
@@ -73,9 +73,9 @@ impl fmt::Display for Endianness {
 impl Endianness {
     pub fn swap(&self, buf: &mut [u8]) {
         match self {
-            Endianness::Big => swap_bytes::<BigEndian>(buf),
-            Endianness::Little => swap_bytes::<LittleEndian>(buf),
-            Endianness::Mixed => swap_bytes::<Mixed>(buf),
+            Self::Big => swap_bytes::<BigEndian>(buf),
+            Self::Little => swap_bytes::<LittleEndian>(buf),
+            Self::Mixed => swap_bytes::<Mixed>(buf),
         }
     }
 }

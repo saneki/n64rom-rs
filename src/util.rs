@@ -11,12 +11,12 @@ crate enum FileSize {
 }
 
 impl FileSize {
-    crate fn from(length: usize, unit: usize) -> FileSize {
+    crate fn from(length: usize, unit: usize) -> Self {
         let result = fdivide(length, unit);
         if result.trunc() == result {
-            FileSize::Int(result as usize)
+            Self::Int(result as usize)
         } else {
-            FileSize::Float(result)
+            Self::Float(result)
         }
     }
 }

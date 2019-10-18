@@ -43,7 +43,7 @@ impl Rom {
         (result, calc)
     }
 
-    pub fn read<T>(mut reader: &mut T) -> Result<Rom, HeaderError>
+    pub fn read<T>(mut reader: &mut T) -> Result<Self, HeaderError>
     where
         T: Read,
     {
@@ -57,7 +57,7 @@ impl Rom {
         let mut data: Vec<u8> = Vec::new();
         reader.read_to_end(&mut data)?;
 
-        let rom = Rom {
+        let rom = Self {
             header,
             ipl3,
             data,

@@ -41,13 +41,13 @@ pub enum IPL3 {
 impl fmt::Display for IPL3 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            IPL3::Cic6101(_) => "CIC-NUS-6101",
-            IPL3::Cic6102(_) => "CIC-NUS-6102",
-            IPL3::Cic6103(_) => "CIC-NUS-6103",
-            IPL3::Cic6105(_) => "CIC-NUS-6105",
-            IPL3::Cic6106(_) => "CIC-NUS-6106",
-            IPL3::Cic7102(_) => "CIC-NUS-7102",
-            IPL3::Unknown(_) => "Unknown",
+            Self::Cic6101(_) => "CIC-NUS-6101",
+            Self::Cic6102(_) => "CIC-NUS-6102",
+            Self::Cic6103(_) => "CIC-NUS-6103",
+            Self::Cic6105(_) => "CIC-NUS-6105",
+            Self::Cic6106(_) => "CIC-NUS-6106",
+            Self::Cic7102(_) => "CIC-NUS-7102",
+            Self::Unknown(_) => "Unknown",
         };
         write!(f, "{}", s)
     }
@@ -55,12 +55,12 @@ impl fmt::Display for IPL3 {
 
 impl fmt::Debug for IPL3 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        <IPL3 as fmt::Display>::fmt(self, f)
+        <Self as fmt::Display>::fmt(self, f)
     }
 }
 
 impl IPL3 {
-    pub fn read<T>(reader: &mut T) -> io::Result<IPL3>
+    pub fn read<T>(reader: &mut T) -> io::Result<Self>
     where
         T: Read,
     {
@@ -72,19 +72,19 @@ impl IPL3 {
         let mut hasher = Hasher::new();
         hasher.update(&ipl);
         let ipl3 = match hasher.finalize() {
-            0x6170_a4a1 => IPL3::Cic6101(ipl),
-            0x90bb_6cb5 => IPL3::Cic6102(ipl),
-            0x0b05_0ee0 => IPL3::Cic6103(ipl),
-            0x98bc_2c86 => IPL3::Cic6105(ipl),
-            0xacc8_580a => IPL3::Cic6106(ipl),
-            0x009e_9ea3 => IPL3::Cic7102(ipl),
-            _ => IPL3::Unknown(ipl),
+            0x6170_a4a1 => Self::Cic6101(ipl),
+            0x90bb_6cb5 => Self::Cic6102(ipl),
+            0x0b05_0ee0 => Self::Cic6103(ipl),
+            0x98bc_2c86 => Self::Cic6105(ipl),
+            0xacc8_580a => Self::Cic6106(ipl),
+            0x009e_9ea3 => Self::Cic7102(ipl),
+            _ => Self::Unknown(ipl),
         };
 
         Ok(ipl3)
     }
 
-    pub fn read_path(path: impl AsRef<Path>) -> Result<IPL3, IPL3Error> {
+    pub fn read_path(path: impl AsRef<Path>) -> Result<Self, IPL3Error> {
         // TODO
         let mut f = File::open(path)?;
 
@@ -98,20 +98,20 @@ impl IPL3 {
             )))?;
         }
 
-        let ipl3 = IPL3::read(&mut f)?;
+        let ipl3 = Self::read(&mut f)?;
 
         Ok(ipl3)
     }
 
     pub fn get_ipl(&self) -> &[u8; IPL_SIZE] {
         match self {
-            IPL3::Cic6101(bin) => bin,
-            IPL3::Cic6102(bin) => bin,
-            IPL3::Cic6103(bin) => bin,
-            IPL3::Cic6105(bin) => bin,
-            IPL3::Cic6106(bin) => bin,
-            IPL3::Cic7102(bin) => bin,
-            IPL3::Unknown(bin) => bin,
+            Self::Cic6101(bin) => bin,
+            Self::Cic6102(bin) => bin,
+            Self::Cic6103(bin) => bin,
+            Self::Cic6105(bin) => bin,
+            Self::Cic6106(bin) => bin,
+            Self::Cic7102(bin) => bin,
+            Self::Unknown(bin) => bin,
         }
     }
 
@@ -129,9 +129,9 @@ impl IPL3 {
 
         // Initial checksum value
         let checksum = match self {
-            IPL3::Cic6103(_) => 0xa388_6759,
-            IPL3::Cic6105(_) => 0xdf26_f436,
-            IPL3::Cic6106(_) => 0x1fea_617a,
+            Self::Cic6103(_) => 0xa388_6759,
+            Self::Cic6105(_) => 0xdf26_f436,
+            Self::Cic6106(_) => 0x1fea_617a,
             _ => 0xf8ca_4ddc,
         };
 
@@ -179,7 +179,7 @@ impl IPL3 {
 
             // Advance accumulator 6
             match self {
-                IPL3::Cic6105(_) => {
+                Self::Cic6105(_) => {
                     let current_ipl = ipl.next().unwrap();
                     let current_ipl = Wrapping(BigEndian::read_u32(&current_ipl));
                     acc6 += current ^ current_ipl;
@@ -191,8 +191,8 @@ impl IPL3 {
         }
 
         let (crc1, crc2) = match self {
-            IPL3::Cic6103(_) => ((acc1 ^ acc2) + acc3, (acc4 ^ acc5) + acc6),
-            IPL3::Cic6106(_) => (acc1 * acc2 + acc3, acc4 * acc5 + acc6),
+            Self::Cic6103(_) => ((acc1 ^ acc2) + acc3, (acc4 ^ acc5) + acc6),
+            Self::Cic6106(_) => (acc1 * acc2 + acc3, acc4 * acc5 + acc6),
             _ => (acc1 ^ acc2 ^ acc3, acc4 ^ acc5 ^ acc6),
         };
 
@@ -203,8 +203,8 @@ impl IPL3 {
     pub fn offset(&self, entry_point: u32) -> u32 {
         entry_point
             + match self {
-                IPL3::Cic6103(_) => 0x0010_0000,
-                IPL3::Cic6106(_) => 0x0020_0000,
+                Self::Cic6103(_) => 0x0010_0000,
+                Self::Cic6106(_) => 0x0020_0000,
                 _ => 0,
             }
     }

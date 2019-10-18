@@ -148,12 +148,12 @@ impl N64Header {
         (self.crc1, self.crc2)
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<(N64Header, Endianness), HeaderError> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<(Self, Endianness), HeaderError> {
         let mut cursor = Cursor::new(&bytes);
         Self::read(&mut cursor)
     }
 
-    pub fn read<'a, T>(reader: &'a mut T) -> Result<(N64Header, Endianness), HeaderError>
+    pub fn read<'a, T>(reader: &'a mut T) -> Result<(Self, Endianness), HeaderError>
     where
         T: Read,
     {
@@ -166,12 +166,12 @@ impl N64Header {
 
         let mut cursor = Cursor::new(buf.to_vec());
         let mut reader = Reader::from(&mut cursor, &order);
-        let header = N64Header::read_raw(&mut reader)?;
+        let header = Self::read_raw(&mut reader)?;
         Ok((header, order))
     }
 
     /// Read without checking for endianness.
-    pub fn read_raw<T>(reader: &mut T) -> io::Result<N64Header>
+    pub fn read_raw<T>(reader: &mut T) -> io::Result<Self>
     where
         T: Read,
     {
@@ -207,7 +207,7 @@ impl N64Header {
         let region_code = reader.read_u8()?;
         let _reserved_3 = reader.read_u8()?;
 
-        let header = N64Header {
+        let header = Self {
             // 0x00
             magic,
             clock_rate,
@@ -258,7 +258,7 @@ impl N64Header {
         program: &[u8],
         fs: &[u8],
         ipl3: &IPL3,
-    ) -> N64Header {
+    ) -> Self {
         let (crc1, crc2) = ipl3.compute_crcs(program, fs);
         let entry_point = ipl3.offset(entry_point);
 
@@ -279,7 +279,7 @@ impl N64Header {
             device_rw_release_duration: 64,
         };
 
-        N64Header {
+        Self {
             // 0x00
             magic,
             clock_rate: 15,

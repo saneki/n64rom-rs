@@ -115,8 +115,8 @@ pub struct N64Header {
     release: u32,                   // Unused by IPL and OS
 
     // 0x10
-    crc1: u32,
-    crc2: u32,
+    crate crc1: u32,
+    crate crc2: u32,
     _reserved_1: [u8; 8],
 
     // 0x20

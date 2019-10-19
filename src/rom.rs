@@ -8,9 +8,9 @@ use crate::ipl3::{IPL3, IPL_SIZE};
 use crate::util::{FileSize, MEBIBYTE};
 
 pub struct Rom {
-    header: N64Header,
-    ipl3: IPL3,
-    data: Vec<u8>,
+    pub header: N64Header,
+    pub ipl3: IPL3,
+    pub data: Vec<u8>,
 
     /// Byte order (endianness) of rom file.
     order: Endianness,
@@ -41,6 +41,21 @@ impl Rom {
         let calc = self.ipl3.compute_crcs(&self.data, &[]);
         let result = crcs == calc;
         (result, calc)
+    }
+
+    /// Correct the CRC values in the header.
+    pub fn correct_crc(&mut self) -> bool {
+        let (result, (calc1, calc2)) = self.check_crc();
+        match result {
+            true => result,
+            false => {
+                // Update the header CRC fields
+                self.header.crc1 = calc1;
+                self.header.crc2 = calc2;
+
+                result
+            }
+        }
     }
 
     pub fn order(&self) -> &Endianness {

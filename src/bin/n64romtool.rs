@@ -1,10 +1,11 @@
 use clap::{App, Arg, ArgMatches};
-use std::fs::File;
-use std::io;
+use std::fs::{File, OpenOptions};
+use std::io::{self, Seek, SeekFrom, Write};
 use std::path::Path;
 use failure::Fail;
 
 use n64rom::bytes::Endianness;
+use n64rom::io::Writer;
 use n64rom::rom::Rom;
 use n64rom::header;
 
@@ -68,6 +69,13 @@ fn main() -> Result<(), Error> {
                     .required(true)
                     .help("Output rom file"))
         )
+        .subcommand(
+            App::new("correct")
+                .about("Correct the CRC values of a rom file")
+                .arg(Arg::with_name("file")
+                    .required(true)
+                    .help("Rom file"))
+        )
         .get_matches();
 
     main_with_args(&matches)
@@ -81,6 +89,13 @@ fn load_rom(path: &str) -> Result<Rom, Error> {
     };
 
     Ok(rom)
+}
+
+fn load_rom_rw(path: &str) -> Result<(Rom, File), Error> {
+    let in_path = Path::new(path);
+    let mut file = OpenOptions::new().read(true).write(true).open(in_path)?;
+    let rom = Rom::read(&mut file)?;
+    Ok((rom, file))
 }
 
 fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
@@ -120,6 +135,25 @@ fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
             rom.write(&mut file, Some(&order))?;
             println!("Done!");
             Ok(())
+        }
+        ("correct", Some(matches)) => {
+            let path = matches.value_of("file").unwrap();
+            let (mut rom, mut file) = load_rom_rw(&path)?;
+
+            if rom.correct_crc() {
+                println!("Rom CRC values are already correct!");
+                Ok(())
+            } else {
+                file.seek(SeekFrom::Start(0))?;
+
+                // Use a writer that respects the original byte order
+                let mut writer = Writer::from(&mut file, &rom.order());
+                rom.header.write(&mut writer)?;
+                writer.flush()?;
+
+                println!("Corrected!");
+                Ok(())
+            }
         }
         ("show", Some(matches)) => {
             let path = matches.value_of("file").unwrap();

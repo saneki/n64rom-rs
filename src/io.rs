@@ -1,8 +1,11 @@
 use std::io::{Read, Result, Write};
+use static_assertions;
 use crate::bytes::Endianness;
 
-// Todo: Assert compile-time check of divisible-by-4
 const BUFFER_SIZE: usize = 1024 * 16;
+
+// Assert buffer size is divisible by 4.
+static_assertions::const_assert_eq!(BUFFER_SIZE % 4, 0);
 
 pub struct Reader<'r, T>
 where

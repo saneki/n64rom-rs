@@ -5,6 +5,9 @@
 #![feature(wrapping_int_impl)]
 #![warn(rust_2018_idioms)]
 
+#[macro_use]
+extern crate static_assertions;
+
 pub mod bytes;
 pub mod header;
 pub mod io;

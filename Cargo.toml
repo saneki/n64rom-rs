@@ -16,6 +16,7 @@ crc32fast = "1.2"
 failure = "0.1"
 failure_derive = "0.1"
 itertools = "0.8"
+static_assertions = "1.0"
 
 [features]
 n64romtool = ["clap"]

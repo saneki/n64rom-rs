@@ -26,11 +26,11 @@ impl Swap for LittleEndian {
         let swaps = buf.len() / 4;
         for i in 0..swaps {
             let idx = i*4;
-            let temp = buf[idx];
-            buf[idx] = buf[idx+1];
+            let (temp2, temp1) = (buf[idx], buf[idx+1]);
+            buf[idx] = buf[idx+3];
             buf[idx+1] = buf[idx+2];
-            buf[idx+2] = buf[idx+3];
-            buf[idx+3] = temp;
+            buf[idx+2] = temp1;
+            buf[idx+3] = temp2;
         }
     }
 }
@@ -51,7 +51,7 @@ impl Swap for Mixed {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 /// Convenience wrapper enum around the separate Swap endianness enums.
 pub enum Endianness {
     Big,

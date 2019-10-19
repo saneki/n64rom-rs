@@ -325,4 +325,12 @@ impl N64Header {
 
         buffer
     }
+
+    pub fn write<'a, T>(&self, writer: &'a mut T) -> io::Result<usize>
+    where
+        T: Write,
+    {
+        let data = self.to_vec();
+        writer.write(&data)
+    }
 }

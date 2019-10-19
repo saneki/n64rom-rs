@@ -1,9 +1,9 @@
 use std::fmt;
-use std::io::Read;
+use std::io::{self, Read, Write};
 
 use crate::bytes::Endianness;
 use crate::header::{HeaderError, N64Header, HEADER_SIZE};
-use crate::io::Reader;
+use crate::io::{Reader, Writer};
 use crate::ipl3::{IPL3, IPL_SIZE};
 use crate::util::{FileSize, MEBIBYTE};
 
@@ -43,6 +43,10 @@ impl Rom {
         (result, calc)
     }
 
+    pub fn order(&self) -> &Endianness {
+        &self.order
+    }
+
     pub fn read<T>(mut reader: &mut T) -> Result<Self, HeaderError>
     where
         T: Read,
@@ -65,6 +69,30 @@ impl Rom {
         };
 
         Ok(rom)
+    }
+
+    pub fn write<'a, T>(&self, writer: &'a mut T, endianness: Option<&Endianness>) -> io::Result<usize>
+    where
+        T: Write,
+    {
+        let order = match endianness {
+            // Use endianness if specified
+            Some(e) => e,
+            // Otherwise default to original order
+            _ => &self.order,
+        };
+
+        // Wrap in writer that respects chosen byte order
+        let mut writer = Writer::from(writer, order);
+
+        // Write header, IPL3 and data
+        let mut written = self.header.write(&mut writer)?;
+        written += self.ipl3.write(&mut writer)?;
+        written += writer.write(&self.data)?;
+
+        // Todo: Compare total amount written to expected length
+
+        Ok(written)
     }
 
     pub fn len(&self) -> usize {

@@ -4,6 +4,7 @@ use std::io;
 use std::path::Path;
 use failure::Fail;
 
+use n64rom::bytes::Endianness;
 use n64rom::rom::Rom;
 use n64rom::header;
 
@@ -42,6 +43,18 @@ fn main() -> Result<(), Error> {
             .short("c")
             .long("check-crc")
             .help("Verifies whether or not the CRC values are correct"))
+        .arg(Arg::with_name("convert-order")
+            .short("w")
+            .long("convert-order")
+            .takes_value(true)
+            .possible_values(&["big", "little", "mixed"])
+            .requires("output")
+            .help("Byte order to convert to"))
+        .arg(Arg::with_name("output")
+            .short("o")
+            .long("output")
+            .takes_value(true)
+            .help("Output file"))
         .arg(Arg::with_name("FILE")
             .required(true))
         .get_matches();
@@ -67,6 +80,24 @@ fn main_with_rom(rom: &Rom, matches: &ArgMatches) -> Result<(), Error> {
         } else {
             return Err(Error::CRCError(crcs.0, crcs.1));
         }
+    } else if matches.is_present("convert-order") {
+        let order = match matches.value_of("convert-order").unwrap() {
+            "big" => Endianness::Big,
+            "little" => Endianness::Little,
+            "mixed" => Endianness::Mixed,
+            _ => unreachable!(),
+        };
+
+        // Check if the rom file is already in this byte order
+        if rom.order() == &order {
+            println!("Rom file is already in {} byte order.", order);
+            return Ok(());
+        }
+
+        let out_path = matches.value_of("output").unwrap();
+        let mut file = File::create(out_path)?;
+        rom.write(&mut file, Some(&order))?;
+        println!("Done!")
     } else {
         println!("{}", rom);
     }

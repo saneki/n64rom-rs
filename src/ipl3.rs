@@ -2,7 +2,7 @@ use byteorder::{BigEndian, ByteOrder};
 use itertools::Itertools;
 use std::fmt;
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::num::Wrapping;
 use std::path::Path;
 
@@ -207,6 +207,14 @@ impl IPL3 {
                 Self::Cic6106(_) => 0x0020_0000,
                 _ => 0,
             }
+    }
+
+    pub fn write<'a, T>(&self, writer: &'a mut T) -> io::Result<usize>
+    where
+        T: Write,
+    {
+        let ipl = self.get_ipl();
+        writer.write(ipl)
     }
 }
 

@@ -39,68 +39,99 @@ fn main() -> Result<(), Error> {
     let matches = App::new("n64romtool")
         .author("saneki <s@neki.me>")
         .about("Displays information about N64 ROM files")
-        .arg(Arg::with_name("check-crc")
-            .short("c")
-            .long("check-crc")
-            .help("Verifies whether or not the CRC values are correct"))
-        .arg(Arg::with_name("convert-order")
-            .short("w")
-            .long("convert-order")
-            .takes_value(true)
-            .possible_values(&["big", "little", "mixed"])
-            .requires("output")
-            .help("Byte order to convert to"))
-        .arg(Arg::with_name("output")
-            .short("o")
-            .long("output")
-            .takes_value(true)
-            .help("Output file"))
-        .arg(Arg::with_name("FILE")
-            .required(true))
+        .subcommand(
+            App::new("show")
+                .about("Show details about a rom file")
+                .arg(Arg::with_name("file")
+                    .required(true)
+                    .help("Rom file"))
+        )
+        .subcommand(
+            App::new("check")
+                .about("Verify whether or not the CRC values of a rom file are correct")
+                .arg(Arg::with_name("file")
+                    .required(true)
+                    .help("Rom file"))
+        )
+        .subcommand(
+            App::new("convert")
+                .about("Convert a rom file to a different byte order")
+                .arg(Arg::with_name("order")
+                    .takes_value(true)
+                    .possible_values(&["big", "little", "mixed"])
+                    .required(true)
+                    .help("Byte order to convert to"))
+                .arg(Arg::with_name("input")
+                    .required(true)
+                    .help("Input rom file"))
+                .arg(Arg::with_name("output")
+                    .required(true)
+                    .help("Output rom file"))
+        )
         .get_matches();
 
     main_with_args(&matches)
 }
 
-fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
-    let in_path = Path::new(matches.value_of("FILE").unwrap());
+fn load_rom(path: &str) -> Result<Rom, Error> {
+    let in_path = Path::new(path);
     let rom = {
         let mut file = File::open(in_path)?;
         Rom::read(&mut file)?
     };
 
-    main_with_rom(&rom, &matches)
+    Ok(rom)
 }
 
-fn main_with_rom(rom: &Rom, matches: &ArgMatches) -> Result<(), Error> {
-    if matches.is_present("check-crc") {
-        let (result, crcs) = rom.check_crc();
-        if result {
-            println!("Correct!");
-        } else {
-            return Err(Error::CRCError(crcs.0, crcs.1));
-        }
-    } else if matches.is_present("convert-order") {
-        let order = match matches.value_of("convert-order").unwrap() {
-            "big" => Endianness::Big,
-            "little" => Endianness::Little,
-            "mixed" => Endianness::Mixed,
-            _ => unreachable!(),
-        };
+fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
 
-        // Check if the rom file is already in this byte order
-        if rom.order() == &order {
-            println!("Rom file is already in {} byte order.", order);
-            return Ok(());
-        }
+    match matches.subcommand() {
+        ("check", Some(matches)) => {
+            let path = matches.value_of("file").unwrap();
+            let rom = load_rom(&path)?;
 
-        let out_path = matches.value_of("output").unwrap();
-        let mut file = File::create(out_path)?;
-        rom.write(&mut file, Some(&order))?;
-        println!("Done!")
-    } else {
-        println!("{}", rom);
+            let (result, crcs) = rom.check_crc();
+            if result {
+                println!("Correct!");
+                Ok(())
+            } else {
+                Err(Error::CRCError(crcs.0, crcs.1))
+            }
+        }
+        ("convert", Some(matches)) => {
+            let path = matches.value_of("input").unwrap();
+            let rom = load_rom(&path)?;
+
+            let order = match matches.value_of("order").unwrap() {
+                "big" => Endianness::Big,
+                "little" => Endianness::Little,
+                "mixed" => Endianness::Mixed,
+                _ => unreachable!(),
+            };
+
+            // Check if the rom file is already in this byte order
+            if rom.order() == &order {
+                println!("Rom file is already in {} byte order.", order);
+                return Ok(());
+            }
+
+            let out_path = matches.value_of("output").unwrap();
+            let mut file = File::create(out_path)?;
+            rom.write(&mut file, Some(&order))?;
+            println!("Done!");
+            Ok(())
+        }
+        ("show", Some(matches)) => {
+            let path = matches.value_of("file").unwrap();
+            let rom = load_rom(&path)?;
+
+            println!("{}", rom);
+            Ok(())
+        }
+        ("", None) => {
+            println!("No subcommand was used");
+            Ok(())
+        }
+        _ => unreachable!(),
     }
-
-    Ok(())
 }

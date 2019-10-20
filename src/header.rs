@@ -107,7 +107,7 @@ impl Magic {
     }
 }
 
-pub struct N64Header {
+pub struct Header {
     // 0x00
     magic: Magic,
     clock_rate: u32,                // Unused by IPL and OS
@@ -128,7 +128,7 @@ pub struct N64Header {
     _reserved_3: u8,
 }
 
-impl fmt::Display for N64Header {
+impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut builder = Vec::<String>::new();
         let name = self.name().unwrap_or("<???>");
@@ -143,7 +143,7 @@ impl fmt::Display for N64Header {
     }
 }
 
-impl N64Header {
+impl Header {
     pub fn crcs(&self) -> (u32, u32) {
         (self.crc1, self.crc2)
     }

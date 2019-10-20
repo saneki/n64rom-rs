@@ -2,13 +2,13 @@ use std::fmt;
 use std::io::{self, Read, Write};
 
 use crate::bytes::Endianness;
-use crate::header::{HeaderError, N64Header, HEADER_SIZE};
+use crate::header::{Header, HeaderError, HEADER_SIZE};
 use crate::io::{Reader, Writer};
 use crate::ipl3::{IPL3, IPL_SIZE};
 use crate::util::{FileSize, MEBIBYTE};
 
 pub struct Rom {
-    pub header: N64Header,
+    pub header: Header,
     pub ipl3: IPL3,
     pub data: Vec<u8>,
 
@@ -73,7 +73,7 @@ impl Rom {
     /// Read Rom.
     pub fn read_with_body<T: Read>(mut reader: &mut T, read_body: bool) -> Result<Self, HeaderError> {
         // Read header & infer endianness
-        let (header, order) = N64Header::read(&mut reader)?;
+        let (header, order) = Header::read(&mut reader)?;
 
         // Create new reader based on endianness, read remaining with it
         let mut reader = Reader::from(&mut reader, &order);

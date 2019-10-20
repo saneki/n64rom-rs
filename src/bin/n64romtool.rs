@@ -8,6 +8,7 @@ use n64rom::bytes::Endianness;
 use n64rom::io::Writer;
 use n64rom::rom::Rom;
 use n64rom::header;
+use n64rom::util::{FileSize, MEBIBYTE};
 
 #[derive(Debug, Fail)]
 enum Error {
@@ -81,14 +82,11 @@ fn main() -> Result<(), Error> {
     main_with_args(&matches)
 }
 
-fn load_rom(path: &str) -> Result<Rom, Error> {
+fn load_rom(path: &str, with_body: bool) -> Result<(Rom, File), Error> {
     let in_path = Path::new(path);
-    let rom = {
-        let mut file = File::open(in_path)?;
-        Rom::read(&mut file)?
-    };
-
-    Ok(rom)
+    let mut file = File::open(in_path)?;
+    let rom = Rom::read_with_body(&mut file, with_body)?;
+    Ok((rom, file))
 }
 
 fn load_rom_rw(path: &str) -> Result<(Rom, File), Error> {
@@ -103,7 +101,7 @@ fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
     match matches.subcommand() {
         ("check", Some(matches)) => {
             let path = matches.value_of("file").unwrap();
-            let rom = load_rom(&path)?;
+            let (rom, _) = load_rom(&path, true)?;
 
             let (result, crcs) = rom.check_crc();
             if result {
@@ -115,7 +113,7 @@ fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
         }
         ("convert", Some(matches)) => {
             let path = matches.value_of("input").unwrap();
-            let rom = load_rom(&path)?;
+            let (rom, _) = load_rom(&path, true)?;
 
             let order = match matches.value_of("order").unwrap() {
                 "big" => Endianness::Big,
@@ -156,10 +154,27 @@ fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
             }
         }
         ("show", Some(matches)) => {
+            // Read rom with only head (header & IPL3)
             let path = matches.value_of("file").unwrap();
-            let rom = load_rom(&path)?;
+            let (rom, file) = load_rom(&path, false)?;
+
+            // For efficiency, instead of reading all data to determine rom size, check file metadata
+            let metadata = file.metadata()?;
+            let filesize = FileSize::from(metadata.len(), MEBIBYTE);
+
+            // Show size text in MiB
+            let sizetext = match filesize {
+                FileSize::Float(value) => {
+                    format!("{:.*} MiB", 1, value)
+                }
+                FileSize::Int(value) => {
+                    format!("{} MiB", value)
+                }
+            };
 
             println!("{}", rom);
+            println!("  Rom Size: {}", &sizetext);
+
             Ok(())
         }
         ("", None) => {

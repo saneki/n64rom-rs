@@ -18,17 +18,20 @@ pub struct Rom {
 
 impl fmt::Display for Rom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let filesize = FileSize::from(self.len(), MEBIBYTE);
         let mut builder = Vec::<String>::new();
         builder.push(format!("{}", self.header));
         builder.push(format!("  IPL3: {}", self.ipl3));
         builder.push(format!("  Byte Order: {}", self.order));
-        match filesize {
-            FileSize::Float(value) => {
-                builder.push(format!("  Rom Size: {:.*} MiB", 1, value));
-            }
-            FileSize::Int(value) => {
-                builder.push(format!("  Rom Size: {} MiB", value));
+        // Only show rom size if we have data.
+        if self.data.len() > 0 {
+            let filesize = FileSize::from(self.len() as u64, MEBIBYTE);
+            match filesize {
+                FileSize::Float(value) => {
+                    builder.push(format!("  Rom Size: {:.*} MiB", 1, value));
+                }
+                FileSize::Int(value) => {
+                    builder.push(format!("  Rom Size: {} MiB", value));
+                }
             }
         }
         write!(f, "{}", builder.join("\n"))
@@ -62,7 +65,16 @@ impl Rom {
         &self.order
     }
 
+    /// Read Rom with all data.
     pub fn read<T>(mut reader: &mut T) -> Result<Self, HeaderError>
+    where
+        T: Read,
+    {
+        Self::read_with_body(&mut reader, true)
+    }
+
+    /// Read Rom.
+    pub fn read_with_body<T>(mut reader: &mut T, read_body: bool) -> Result<Self, HeaderError>
     where
         T: Read,
     {
@@ -73,8 +85,12 @@ impl Rom {
         let mut reader = Reader::from(&mut reader, &order);
         let ipl3 = IPL3::read(&mut reader)?;
 
-        let mut data: Vec<u8> = Vec::new();
-        reader.read_to_end(&mut data)?;
+        // Read data if specified
+        let mut data = Vec::new();
+        if read_body {
+            reader.read_to_end(&mut data)?;
+        }
+        let data = data;
 
         let rom = Self {
             header,

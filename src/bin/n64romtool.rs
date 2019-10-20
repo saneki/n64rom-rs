@@ -41,6 +41,7 @@ impl From<io::Error> for Error {
 fn main() -> Result<(), Error> {
     let matches = App::new("n64romtool")
         .author("saneki <s@neki.me>")
+        .version("0.1.0")
         .about("Displays information about N64 ROM files")
         .subcommand(
             App::new("show")

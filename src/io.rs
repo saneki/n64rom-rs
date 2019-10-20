@@ -7,10 +7,7 @@ const BUFFER_SIZE: usize = 1024 * 16;
 // Assert buffer size is divisible by 4.
 static_assertions::const_assert_eq!(BUFFER_SIZE % 4, 0);
 
-pub struct Reader<'r, T>
-where
-    T: Read,
-{
+pub struct Reader<'r, T: Read> {
     buffer: Box<[u8; BUFFER_SIZE]>,
     endianness: Endianness,
     idx: usize,
@@ -18,10 +15,7 @@ where
     reader: &'r mut T,
 }
 
-impl<'r, T> Reader<'r, T>
-where
-    T: Read,
-{
+impl<'r, T: Read> Reader<'r, T> {
     pub fn from(reader: &'r mut T, endianness: &Endianness) -> Self {
         Self {
             buffer: box[0; BUFFER_SIZE],
@@ -54,10 +48,7 @@ where
     }
 }
 
-impl<'r, T> Read for Reader<'r, T>
-where
-    T: Read,
-{
+impl<'r, T: Read> Read for Reader<'r, T> {
     fn read(&mut self, mut buf: &mut [u8]) -> Result<usize> {
         let length = buf.len();
         let mut written = 0;
@@ -91,20 +82,14 @@ where
 }
 
 /// Writer.
-pub struct Writer<'w, T>
-where
-    T: Write,
-{
+pub struct Writer<'w, T: Write> {
     buffer: Box<[u8; BUFFER_SIZE]>,
     endianness: Endianness,
     length: usize,
     writer: &'w mut T,
 }
 
-impl<'w, T> Writer<'w, T>
-where
-    T: Write,
-{
+impl<'w, T: Write> Writer<'w, T> {
     pub fn from(writer: &'w mut T, endianness: &Endianness) -> Self {
         Self {
             buffer: box[0; BUFFER_SIZE],
@@ -135,10 +120,7 @@ where
     }
 }
 
-impl<'w, T> Write for Writer<'w, T>
-where
-    T: Write,
-{
+impl<'w, T: Write> Write for Writer<'w, T> {
     fn write(&mut self, buf: &[u8]) -> Result<usize> {
         let mut idx = 0;
         let mut written = 0;

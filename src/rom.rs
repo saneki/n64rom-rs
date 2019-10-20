@@ -66,18 +66,12 @@ impl Rom {
     }
 
     /// Read Rom with all data.
-    pub fn read<T>(mut reader: &mut T) -> Result<Self, HeaderError>
-    where
-        T: Read,
-    {
+    pub fn read<T: Read>(mut reader: &mut T) -> Result<Self, HeaderError> {
         Self::read_with_body(&mut reader, true)
     }
 
     /// Read Rom.
-    pub fn read_with_body<T>(mut reader: &mut T, read_body: bool) -> Result<Self, HeaderError>
-    where
-        T: Read,
-    {
+    pub fn read_with_body<T: Read>(mut reader: &mut T, read_body: bool) -> Result<Self, HeaderError> {
         // Read header & infer endianness
         let (header, order) = N64Header::read(&mut reader)?;
 
@@ -102,10 +96,7 @@ impl Rom {
         Ok(rom)
     }
 
-    pub fn write<'a, T>(&self, writer: &'a mut T, endianness: Option<&Endianness>) -> io::Result<usize>
-    where
-        T: Write,
-    {
+    pub fn write<'a, T: Write>(&self, writer: &'a mut T, endianness: Option<&Endianness>) -> io::Result<usize> {
         let order = match endianness {
             // Use endianness if specified
             Some(e) => e,

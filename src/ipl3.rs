@@ -60,10 +60,7 @@ impl fmt::Debug for IPL3 {
 }
 
 impl IPL3 {
-    pub fn read<T>(reader: &mut T) -> io::Result<Self>
-    where
-        T: Read,
-    {
+    pub fn read<T: Read>(reader: &mut T) -> io::Result<Self> {
         // Read file contents
         let mut ipl = [0; IPL_SIZE];
         reader.read_exact(&mut ipl)?;
@@ -209,10 +206,7 @@ impl IPL3 {
             }
     }
 
-    pub fn write<'a, T>(&self, writer: &'a mut T) -> io::Result<usize>
-    where
-        T: Write,
-    {
+    pub fn write<'a, T: Write>(&self, writer: &'a mut T) -> io::Result<usize> {
         let ipl = self.get_ipl();
         writer.write(ipl)
     }

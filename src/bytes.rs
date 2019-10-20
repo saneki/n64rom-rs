@@ -1,6 +1,6 @@
 use std::fmt;
 
-pub fn swap_bytes<T>(buf: &mut [u8]) where T: Swap {
+pub fn swap_bytes<T: Swap>(buf: &mut [u8]) {
     T::swap(buf)
 }
 

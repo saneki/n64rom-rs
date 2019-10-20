@@ -153,10 +153,7 @@ impl N64Header {
         Self::read(&mut cursor)
     }
 
-    pub fn read<'a, T>(reader: &'a mut T) -> Result<(Self, Endianness), HeaderError>
-    where
-        T: Read,
-    {
+    pub fn read<'a, T: Read>(reader: &'a mut T) -> Result<(Self, Endianness), HeaderError> {
         let mut buf = [0u8; HEADER_SIZE];
         reader.read_exact(&mut buf)?;
         let buf = buf;
@@ -171,10 +168,7 @@ impl N64Header {
     }
 
     /// Read without checking for endianness.
-    pub fn read_raw<T>(reader: &mut T) -> io::Result<Self>
-    where
-        T: Read,
-    {
+    pub fn read_raw<T: Read>(reader: &mut T) -> io::Result<Self> {
         let mut magic = [0u8; 4];
         reader.read_exact(&mut magic)?;
         let magic = Magic::from(&magic);
@@ -333,10 +327,7 @@ impl N64Header {
         buffer
     }
 
-    pub fn write<'a, T>(&self, writer: &'a mut T) -> io::Result<usize>
-    where
-        T: Write,
-    {
+    pub fn write<'a, T: Write>(&self, writer: &'a mut T) -> io::Result<usize> {
         let data = self.to_vec();
         writer.write(&data)
     }

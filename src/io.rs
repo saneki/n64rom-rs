@@ -1,5 +1,6 @@
-use std::io::{Read, Result, Write};
 use static_assertions;
+use std::io::{Read, Result, Write};
+
 use crate::bytes::Endianness;
 
 const BUFFER_SIZE: usize = 1024 * 16;

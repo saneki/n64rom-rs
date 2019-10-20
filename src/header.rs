@@ -1,10 +1,10 @@
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use failure::Fail;
 use std::fmt;
 use std::io::{self, Cursor};
 use std::io::prelude::*;
 use std::iter::FromIterator;
 use std::str::{self, Utf8Error};
-use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
-use failure::Fail;
 
 use crate::bytes::Endianness;
 use crate::io::Reader;

@@ -1,13 +1,12 @@
 use byteorder::{BigEndian, ByteOrder};
+use crc32fast::Hasher;
+use failure::Fail;
 use itertools::Itertools;
 use std::fmt;
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::num::Wrapping;
 use std::path::Path;
-
-use crc32fast::Hasher;
-use failure::Fail;
 
 pub const IPL_SIZE: usize = 0x0fc0;
 pub const PROGRAM_SIZE: usize = 1024 * 1024;

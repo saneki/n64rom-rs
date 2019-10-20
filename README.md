@@ -1,6 +1,6 @@
-# `cargo-n64`
+# `n64rom`
 
-A `cargo` subcommand to build Nintendo 64 ROMs in Rust! 🦀
+A library and toolkit for working with N64 rom files.
 
 ## Installation
 
@@ -10,23 +10,41 @@ Requires Rust nightly. You can use `rustup` to install the toolchain:
 rustup toolchain install nightly
 ```
 
-Install dependencies:
+Install `n64rom`:
 
 ```bash
-rustup run nightly rustup component add rust-src
-cargo +nightly install cargo-xbuild
+cargo +nightly install n64rom
 ```
 
-Install `cargo-n64`:
+## Tools
+
+`n64romtool` is a provided utility for inspecting N64 rom files.
+
+Currently it can:
+- Show info about the rom's header and IPL3.
+- Convert the rom to a different byte order.
+- Verify the CRC values in the rom header.
+- Correct the CRC values in the rom header.
+
+To install `n64romtool`, run:
 
 ```bash
-cargo +nightly install cargo-n64
+cargo +nightly install n64rom --features=n64romtool
 ```
 
-## What does it do?
+Some usage examples:
 
-Nintendo 64 ROMs are flat binaries, and each one is unique. There is no standard format for the binary beyond a simple 64-byte header and a ~4KB bootcode (aka Initial Program Loader 3/IPL3). Everything beyond the first 4KB boundary is MIPS code and whatever data it requires. This is unlike modern application or game development where an operating system has a standard binary format (like ELF, PE, or WASM). In fact, the N64 doesn't even have an operating system! The flat binary in the ROM *is* the operating system, for all intents and purposes.
+```bash
+# Display info about rom file "MyRom.z64"
+n64romtool show MyRom.z64
 
-This makes it challenging to get started with N64 development, in general. You first have to build an OS from scratch, or use a library like [`libdragon`](https://github.com/DragonMinded/libdragon) or [`libn64`](https://github.com/tj90241/n64chain/tree/master/libn64). Then you need a tool (or two, or three!) to convert the object files from the compiler toolchain into a flat binary, add the header and IPL3, and finally fix the IPL3 checksum. `cargo-n64` takes the place of the latter set of tools and plugs in nicely to the Rust/cargo ecosystem.
+# Convert rom file "MyRom.z64" to big-endian byte order (easiest to read)
+# You can convert to: [big, little, mixed]
+n64romtool convert big MyRom.z64 MyRomBig.z64
 
-For copyright purposes, the IPL3 binary is not included in this package. Collecting a working IPL3 binary is left as an exercise for the reader. You will be required to provide the path to your IPL3 with the `--ipl3` command line argument.
+# Verify the CRC values in rom file "MyRom.z64"
+n64romtool check MyRom.z64
+
+# Correct the CRC values in rom file "MyRom.z64"
+n64romtool correct MyRom.z64
+```

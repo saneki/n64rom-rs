@@ -15,10 +15,10 @@ pub const MAGIC_SIZE: usize = 4;
 
 #[derive(Debug, Fail)]
 pub enum HeaderError {
-    #[fail(display = "IO Error")]
+    #[fail(display = "{}", _0)]
     IOError(#[cause] io::Error),
 
-    #[fail(display = "Unknown byte order from magic: {}", _0)]
+    #[fail(display = "Unknown byte order from magic (0x{:08X})", _0)]
     UnknownByteOrder(u32),
 }
 

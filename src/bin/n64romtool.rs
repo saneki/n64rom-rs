@@ -2,6 +2,7 @@ use clap::{App, Arg, ArgMatches};
 use std::fs::{File, OpenOptions};
 use std::io::{self, Seek, SeekFrom, Write};
 use std::path::Path;
+use std::process;
 use failure::Fail;
 
 use n64rom::bytes::Endianness;
@@ -13,15 +14,15 @@ use n64rom::util::{FileSize, MEBIBYTE};
 #[derive(Debug, Fail)]
 enum Error {
     /// Invalid CRC values.
-    #[fail(display = "Bad CRC values, expected {:08X}, {:08X}", _0, _1)]
+    #[fail(display = "Bad CRC values, expected: (0x{:08X}, 0x{:08X})", _0, _1)]
     CRCError(u32, u32),
 
     /// Error parsing Header.
-    #[fail(display = "Header Error")]
+    #[fail(display = "{}", _0)]
     HeaderError(header::HeaderError),
 
     /// IO error.
-    #[fail(display = "IO Error")]
+    #[fail(display = "{}", _0)]
     IOError(io::Error),
 }
 
@@ -79,7 +80,22 @@ fn main() -> Result<(), Error> {
         )
         .get_matches();
 
-    main_with_args(&matches)
+    match main_with_args(&matches) {
+        Ok(()) => Ok(()),
+        Err(Error::HeaderError(err)) => {
+            println!("Error: {}, are you sure this is a rom file?", err);
+            process::exit(1);
+        }
+        Err(Error::CRCError(crc1, crc2)) => {
+            // Display default CRCError message
+            println!("{}", Error::CRCError(crc1, crc2));
+            process::exit(1);
+        }
+        Err(err) => {
+            println!("Error: {}", err);
+            process::exit(1);
+        }
+    }
 }
 
 fn load_rom(path: &str, with_body: bool) -> Result<(Rom, File), Error> {

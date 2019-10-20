@@ -1,8 +1,8 @@
 use std::fmt;
 use std::io::{self, Cursor};
 use std::io::prelude::*;
+use std::iter::FromIterator;
 use std::str::{self, Utf8Error};
-use std::string::FromUtf8Error;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use failure::Fail;
 
@@ -132,7 +132,7 @@ impl fmt::Display for N64Header {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut builder = Vec::<String>::new();
         let name = self.name().unwrap_or("<???>");
-        let region_id = self.region_id_as_str().unwrap_or(String::from("????"));
+        let region_id = self.region_id_as_str();
         builder.push(format!("N64 ROM Header: {}", name));
         builder.push(format!("  Checksums: 0x{:08X} 0x{:08X}", self.crc1, self.crc2));
         builder.push(format!("  Region: {}", region_id));
@@ -248,8 +248,15 @@ impl N64Header {
         region_id.to_vec()
     }
 
-    pub fn region_id_as_str(&self) -> Result<String, FromUtf8Error> {
-        String::from_utf8(self.region_id())
+    pub fn region_id_as_chars(&self) -> Vec<char> {
+        let bytes = self.region_id();
+        let chars = bytes.into_iter().map(|x| x as char).collect();
+        chars
+    }
+
+    pub fn region_id_as_str(&self) -> String {
+        let chars = self.region_id_as_chars();
+        String::from_iter(&chars)
     }
 
     pub fn new(

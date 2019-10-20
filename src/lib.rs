@@ -13,4 +13,4 @@ pub mod header;
 pub mod io;
 pub mod ipl3;
 pub mod rom;
-crate mod util;
+pub mod util;

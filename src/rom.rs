@@ -7,6 +7,9 @@ use crate::io::{Reader, Writer};
 use crate::ipl3::{IPL3, IPL_SIZE};
 use crate::util::{FileSize, MEBIBYTE};
 
+/// Total size of rom header and IPL3. This will be the file offset where data begins.
+pub const HEAD_SIZE: usize = HEADER_SIZE + IPL_SIZE;
+
 pub struct Rom {
     pub header: Header,
     pub ipl3: IPL3,
@@ -118,6 +121,6 @@ impl Rom {
     }
 
     pub fn len(&self) -> usize {
-        HEADER_SIZE + IPL_SIZE + self.data.len()
+        HEAD_SIZE + self.data.len()
     }
 }

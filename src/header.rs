@@ -134,7 +134,7 @@ impl fmt::Display for N64Header {
         let name = self.name().unwrap_or("<???>");
         let region_id = self.region_id_as_str();
         builder.push(format!("N64 ROM Header: {}", name));
-        builder.push(format!("  Checksums: 0x{:08X} 0x{:08X}", self.crc1, self.crc2));
+        builder.push(format!("  Checksums: (0x{:08X}, 0x{:08X})", self.crc1, self.crc2));
         builder.push(format!("  Region: {}", region_id));
         builder.push(format!("    Manufacturer: {}", self.manufacturer as char));
         builder.push(format!("    Cart ID:      {}{}", self.cart_id[0] as char, self.cart_id[1] as char));

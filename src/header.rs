@@ -28,6 +28,7 @@ impl From<io::Error> for HeaderError {
     }
 }
 
+#[derive(Clone, Copy)]
 /// Represents the initial four bytes of the rom header.
 ///
 /// This value is often used to infer the byte order of the rom data.
@@ -107,6 +108,7 @@ impl Magic {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Header {
     // 0x00
     magic: Magic,

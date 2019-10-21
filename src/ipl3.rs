@@ -26,6 +26,7 @@ impl From<io::Error> for IPL3Error {
     }
 }
 
+#[derive(Clone, Copy)]
 /// IPL3 definitions.
 pub enum IPL3 {
     Cic6101([u8; IPL_SIZE]),

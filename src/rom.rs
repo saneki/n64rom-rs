@@ -10,6 +10,7 @@ use crate::util::{FileSize, MEBIBYTE};
 /// Total size of rom header and IPL3. This will be the file offset where data begins.
 pub const HEAD_SIZE: usize = HEADER_SIZE + IPL_SIZE;
 
+#[derive(Clone)]
 pub struct Rom {
     pub header: Header,
     pub ipl3: IPL3,

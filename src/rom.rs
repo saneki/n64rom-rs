@@ -64,6 +64,15 @@ impl Rom {
         }
     }
 
+    pub fn from(header: Header, ipl3: IPL3, data: Vec<u8>, order: Endianness) -> Self {
+        Self {
+            header,
+            ipl3,
+            data,
+            order,
+        }
+    }
+
     pub fn order(&self) -> &Endianness {
         &self.order
     }

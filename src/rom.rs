@@ -114,6 +114,7 @@ impl Rom {
         let mut written = self.header.write(&mut writer)?;
         written += self.ipl3.write(&mut writer)?;
         written += writer.write(&self.data)?;
+        writer.flush()?;
 
         // Todo: Compare total amount written to expected length
 

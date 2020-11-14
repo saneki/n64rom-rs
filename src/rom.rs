@@ -90,6 +90,16 @@ impl Rom {
         }
     }
 
+    /// Get slice of Rom image data, not including header or IPL3.
+    pub fn data(&self) -> &[u8] {
+        &self.image[HEAD_SIZE..]
+    }
+
+    /// Get slice of Rom image data as mutable, not including header or IPL3.
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        &mut self.image[HEAD_SIZE..]
+    }
+
     /// Construct from a raw image without copying. Requires image data to be in big-endian format.
     pub fn from_image(image: Vec<u8>) -> Result<Self, RomError> {
         let mut head = &image[..HEAD_SIZE];
@@ -110,6 +120,16 @@ impl Rom {
             image,
             order,
         }
+    }
+
+    /// Get slice of full Rom image data.
+    pub fn full(&self) -> &[u8] {
+        &self.image[..]
+    }
+
+    /// Get slice of full Rom image data as mutable.
+    pub fn full_mut(&mut self) -> &mut [u8] {
+        &mut self.image[..]
     }
 
     pub fn order(&self) -> &Endianness {

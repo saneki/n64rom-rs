@@ -14,8 +14,8 @@ pub const HEAD_SIZE: usize = HEADER_SIZE + IPL_SIZE;
 pub struct Rom {
     pub header: Header,
     pub ipl3: IPL3,
+    /// Full Rom image data.
     pub data: Vec<u8>,
-
     /// Byte order (endianness) of rom file.
     order: Endianness,
 }
@@ -27,7 +27,7 @@ impl fmt::Display for Rom {
         builder.push(format!("  IPL3: {}", self.ipl3));
         builder.push(format!("  Byte Order: {}", self.order));
         // Only show rom size if we have data.
-        if self.data.len() > 0 {
+        if self.data.len() > HEAD_SIZE {
             let filesize = FileSize::from(self.len() as u64, MEBIBYTE);
             match filesize {
                 FileSize::Float(value) => {
@@ -45,7 +45,7 @@ impl fmt::Display for Rom {
 impl Rom {
     pub fn check_crc(&self) -> (bool, (u32, u32)) {
         let crcs = self.header.crcs();
-        let calc = self.ipl3.compute_crcs(&self.data, &[]);
+        let calc = self.ipl3.compute_crcs(&self.data[HEAD_SIZE..], &[]);
         let result = crcs == calc;
         (result, calc)
     }
@@ -92,8 +92,11 @@ impl Rom {
         let mut reader = Reader::from(&mut reader, &order);
         let ipl3 = IPL3::read(&mut reader)?;
 
-        // Read data if specified
+        // Read rom data into buffer.
         let mut data = Vec::new();
+        data.extend(header.to_vec());
+        data.extend(ipl3.get_ipl());
+        // Read remaining data if specified.
         if read_body {
             reader.read_to_end(&mut data)?;
         }
@@ -123,7 +126,7 @@ impl Rom {
         // Write header, IPL3 and data
         let mut written = self.header.write(&mut writer)?;
         written += self.ipl3.write(&mut writer)?;
-        written += writer.write(&self.data)?;
+        written += writer.write(&self.data[HEAD_SIZE..])?;
         writer.flush()?;
 
         // Todo: Compare total amount written to expected length
@@ -132,6 +135,6 @@ impl Rom {
     }
 
     pub fn len(&self) -> usize {
-        HEAD_SIZE + self.data.len()
+        self.data.len()
     }
 }

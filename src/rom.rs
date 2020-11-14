@@ -1,3 +1,4 @@
+use failure::Fail;
 use std::fmt;
 use std::io::{self, Read, Write};
 
@@ -9,6 +10,30 @@ use crate::util::{FileSize, MEBIBYTE};
 
 /// Total size of rom header and IPL3. This will be the file offset where data begins.
 pub const HEAD_SIZE: usize = HEADER_SIZE + IPL_SIZE;
+
+#[derive(Debug, Fail)]
+pub enum RomError {
+    #[fail(display = "{}", _0)]
+    IOError(#[cause] io::Error),
+
+    #[fail(display = "{}", _0)]
+    HeaderError(#[cause] HeaderError),
+
+    #[fail(display = "Unsupported endianness for this operation: {}", _0)]
+    UnsupportedEndianness(Endianness),
+}
+
+impl From<io::Error> for RomError {
+    fn from(e: io::Error) -> Self {
+        RomError::IOError(e)
+    }
+}
+
+impl From<HeaderError> for RomError {
+    fn from(e: HeaderError) -> Self {
+        RomError::HeaderError(e)
+    }
+}
 
 #[derive(Clone)]
 pub struct Rom {
@@ -62,6 +87,19 @@ impl Rom {
 
                 result
             }
+        }
+    }
+
+    /// Construct from a raw image without copying. Requires image data to be in big-endian format.
+    pub fn from_image(image: Vec<u8>) -> Result<Self, RomError> {
+        let mut head = &image[..HEAD_SIZE];
+        // Read header & infer endianness.
+        let (header, order) = Header::read(&mut head)?;
+        if order == Endianness::Big {
+            let ipl3 = IPL3::read(&mut head)?;
+            Ok(Rom::from(header, ipl3, image, order))
+        } else {
+            Err(RomError::UnsupportedEndianness(order))
         }
     }
 

@@ -51,7 +51,7 @@ impl Swap for Mixed {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 /// Convenience wrapper enum around the separate Swap endianness enums.
 pub enum Endianness {
     Big,

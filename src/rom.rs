@@ -15,7 +15,7 @@ pub struct Rom {
     pub header: Header,
     pub ipl3: IPL3,
     /// Full Rom image data.
-    pub data: Vec<u8>,
+    pub image: Vec<u8>,
     /// Byte order (endianness) of rom file.
     order: Endianness,
 }
@@ -27,7 +27,7 @@ impl fmt::Display for Rom {
         builder.push(format!("  IPL3: {}", self.ipl3));
         builder.push(format!("  Byte Order: {}", self.order));
         // Only show rom size if we have data.
-        if self.data.len() > HEAD_SIZE {
+        if self.image.len() > HEAD_SIZE {
             let filesize = FileSize::from(self.len() as u64, MEBIBYTE);
             match filesize {
                 FileSize::Float(value) => {
@@ -45,7 +45,7 @@ impl fmt::Display for Rom {
 impl Rom {
     pub fn check_crc(&self) -> (bool, (u32, u32)) {
         let crcs = self.header.crcs();
-        let calc = self.ipl3.compute_crcs(&self.data[HEAD_SIZE..], &[]);
+        let calc = self.ipl3.compute_crcs(&self.image[HEAD_SIZE..], &[]);
         let result = crcs == calc;
         (result, calc)
     }
@@ -65,11 +65,11 @@ impl Rom {
         }
     }
 
-    pub fn from(header: Header, ipl3: IPL3, data: Vec<u8>, order: Endianness) -> Self {
+    pub fn from(header: Header, ipl3: IPL3, image: Vec<u8>, order: Endianness) -> Self {
         Self {
             header,
             ipl3,
-            data,
+            image,
             order,
         }
     }
@@ -93,19 +93,19 @@ impl Rom {
         let ipl3 = IPL3::read(&mut reader)?;
 
         // Read rom data into buffer.
-        let mut data = Vec::new();
-        data.extend(header.to_vec());
-        data.extend(ipl3.get_ipl());
+        let mut image = Vec::new();
+        image.extend(header.to_vec());
+        image.extend(ipl3.get_ipl());
         // Read remaining data if specified.
         if read_body {
-            reader.read_to_end(&mut data)?;
+            reader.read_to_end(&mut image)?;
         }
-        let data = data;
+        let image = image;
 
         let rom = Self {
             header,
             ipl3,
-            data,
+            image,
             order,
         };
 
@@ -126,7 +126,7 @@ impl Rom {
         // Write header, IPL3 and data
         let mut written = self.header.write(&mut writer)?;
         written += self.ipl3.write(&mut writer)?;
-        written += writer.write(&self.data[HEAD_SIZE..])?;
+        written += writer.write(&self.image[HEAD_SIZE..])?;
         writer.flush()?;
 
         // Todo: Compare total amount written to expected length
@@ -135,6 +135,6 @@ impl Rom {
     }
 
     pub fn len(&self) -> usize {
-        self.data.len()
+        self.image.len()
     }
 }

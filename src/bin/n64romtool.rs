@@ -1,9 +1,9 @@
 use clap::{App, Arg, ArgMatches};
-use failure::Fail;
 use std::fs::{File, OpenOptions};
 use std::io::{self, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::process;
+use thiserror::Error;
 
 use n64rom::bytes::Endianness;
 use n64rom::header;
@@ -11,31 +11,17 @@ use n64rom::io::Writer;
 use n64rom::rom::Rom;
 use n64rom::util::{FileSize, MEBIBYTE};
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 enum Error {
     /// Invalid CRC values.
-    #[fail(display = "Bad CRC values, expected: (0x{:08X}, 0x{:08X})", _0, _1)]
+    #[error("Bad CRC values, expected: ({0:#08X}, {1:#08X})")]
     CRCError(u32, u32),
-
     /// Error parsing Header.
-    #[fail(display = "{}", _0)]
-    HeaderError(header::HeaderError),
-
+    #[error("{0}")]
+    HeaderError(#[from] header::HeaderError),
     /// IO error.
-    #[fail(display = "{}", _0)]
-    IOError(io::Error),
-}
-
-impl From<header::HeaderError> for Error {
-    fn from(e: header::HeaderError) -> Self {
-        Error::HeaderError(e)
-    }
-}
-
-impl From<io::Error> for Error {
-    fn from(e: io::Error) -> Self {
-        Error::IOError(e)
-    }
+    #[error("{0}")]
+    IOError(#[from] io::Error),
 }
 
 fn main() -> Result<(), Error> {

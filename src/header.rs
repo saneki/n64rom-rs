@@ -1,10 +1,10 @@
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
-use failure::Fail;
 use std::fmt;
 use std::io::{self, Cursor};
 use std::io::prelude::*;
 use std::iter::FromIterator;
 use std::str::{self, Utf8Error};
+use thiserror::Error;
 
 use crate::bytes::Endianness;
 use crate::io::Reader;
@@ -13,19 +13,12 @@ use crate::ipl3::IPL3;
 pub const HEADER_SIZE: usize = 0x40;
 pub const MAGIC_SIZE: usize = 4;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum HeaderError {
-    #[fail(display = "{}", _0)]
-    IOError(#[cause] io::Error),
-
-    #[fail(display = "Unknown byte order from magic (0x{:08X})", _0)]
+    #[error("{0}")]
+    IOError(#[from] io::Error),
+    #[error("Unknown byte order from magic ({0:#08X})")]
     UnknownByteOrder(u32),
-}
-
-impl From<io::Error> for HeaderError {
-    fn from(e: io::Error) -> Self {
-        HeaderError::IOError(e)
-    }
 }
 
 #[derive(Clone, Copy)]

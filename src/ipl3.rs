@@ -1,29 +1,22 @@
 use byteorder::{BigEndian, ByteOrder};
 use crc32fast::Hasher;
-use failure::Fail;
 use itertools::Itertools;
 use std::fmt;
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::num::Wrapping;
 use std::path::Path;
+use thiserror::Error;
 
 pub const IPL_SIZE: usize = 0x0fc0;
 pub const PROGRAM_SIZE: usize = 1024 * 1024;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum IPL3Error {
-    #[fail(display = "IO Error")]
-    IOError(#[cause] io::Error),
-
-    #[fail(display = "Unable to read IPL3: {}", _0)]
+    #[error("{0}")]
+    IOError(#[from] io::Error),
+    #[error("Unable to read IPL3: {0}")]
     IPL3ReadError(String),
-}
-
-impl From<io::Error> for IPL3Error {
-    fn from(e: io::Error) -> Self {
-        IPL3Error::IOError(e)
-    }
 }
 
 #[derive(Clone, Copy)]

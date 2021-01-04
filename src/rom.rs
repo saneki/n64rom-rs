@@ -1,6 +1,6 @@
-use failure::Fail;
 use std::fmt;
 use std::io::{self, Read, Write};
+use thiserror::Error;
 
 use crate::bytes::Endianness;
 use crate::header::{Header, HeaderError, HEADER_SIZE};
@@ -11,28 +11,14 @@ use crate::util::{FileSize, MEBIBYTE};
 /// Total size of rom header and IPL3. This will be the file offset where data begins.
 pub const HEAD_SIZE: usize = HEADER_SIZE + IPL_SIZE;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum RomError {
-    #[fail(display = "{}", _0)]
-    IOError(#[cause] io::Error),
-
-    #[fail(display = "{}", _0)]
-    HeaderError(#[cause] HeaderError),
-
-    #[fail(display = "Unsupported endianness for this operation: {}", _0)]
+    #[error("{0}")]
+    IOError(#[from] io::Error),
+    #[error("{0}")]
+    HeaderError(#[from] HeaderError),
+    #[error("Unsupported endianness for this operation: {0}")]
     UnsupportedEndianness(Endianness),
-}
-
-impl From<io::Error> for RomError {
-    fn from(e: io::Error) -> Self {
-        RomError::IOError(e)
-    }
-}
-
-impl From<HeaderError> for RomError {
-    fn from(e: HeaderError) -> Self {
-        RomError::HeaderError(e)
-    }
 }
 
 #[derive(Clone)]

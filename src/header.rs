@@ -67,10 +67,7 @@ impl Magic {
     /// If we are reading the file correctly, it should match the BigEndian value.
     pub fn is_expected(&self) -> bool {
         let endianness = self.infer_endianness();
-        match endianness {
-            Ok(Endianness::Big) => true,
-            _ => false,
-        }
+        matches!(endianness, Ok(Endianness::Big))
     }
 
     /// Construct using at least 4 bytes.
@@ -148,7 +145,7 @@ impl Header {
         Self::read(&mut cursor)
     }
 
-    pub fn read<'a, T: Read>(reader: &'a mut T) -> Result<(Self, Endianness), HeaderError> {
+    pub fn read<T: Read>(reader: &'_ mut T) -> Result<(Self, Endianness), HeaderError> {
         let mut buf = [0u8; HEADER_SIZE];
         reader.read_exact(&mut buf)?;
         let buf = buf;
@@ -239,8 +236,7 @@ impl Header {
 
     pub fn region_id_as_chars(&self) -> Vec<char> {
         let bytes = self.region_id();
-        let chars = bytes.into_iter().map(|x| x as char).collect();
-        chars
+        bytes.into_iter().map(|x| x as char).collect()
     }
 
     pub fn region_id_as_str(&self) -> String {
@@ -322,7 +318,7 @@ impl Header {
         buffer
     }
 
-    pub fn write<'a, T: Write>(&self, writer: &'a mut T) -> io::Result<usize> {
+    pub fn write<T: Write>(&self, writer: &'_ mut T) -> io::Result<usize> {
         let data = self.to_vec();
         writer.write(&data)
     }

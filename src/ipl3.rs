@@ -82,10 +82,10 @@ impl IPL3 {
         let metadata = f.metadata()?;
         let len = metadata.len();
         if len as usize != IPL_SIZE {
-            Err(IPL3Error::IPL3ReadError(format!(
+            return Err(IPL3Error::IPL3ReadError(format!(
                 "Expected file size {}, found {}",
                 IPL_SIZE, len
-            )))?;
+            )))
         }
 
         let ipl3 = Self::read(&mut f)?;
@@ -199,7 +199,7 @@ impl IPL3 {
             }
     }
 
-    pub fn write<'a, T: Write>(&self, writer: &'a mut T) -> io::Result<usize> {
+    pub fn write<T: Write>(&self, writer: &'_ mut T) -> io::Result<usize> {
         let ipl = self.get_ipl();
         writer.write(ipl)
     }

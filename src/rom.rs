@@ -181,4 +181,8 @@ impl Rom {
     pub fn len(&self) -> usize {
         self.image.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }

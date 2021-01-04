@@ -1,4 +1,3 @@
-use static_assertions;
 use std::io::{Read, Result, Write};
 
 use crate::bytes::Endianness;
@@ -6,7 +5,7 @@ use crate::bytes::Endianness;
 const BUFFER_SIZE: usize = 1024 * 16;
 
 // Assert buffer size is divisible by 4.
-static_assertions::const_assert_eq!(BUFFER_SIZE % 4, 0);
+const_assert_eq!(BUFFER_SIZE % 4, 0);
 
 pub struct Reader<'r, T: Read> {
     buffer: Box<[u8; BUFFER_SIZE]>,
@@ -30,7 +29,7 @@ impl<'r, T: Read> Reader<'r, T> {
     /// Read bytes from the buffer.
     fn buf_read(&mut self, length: usize) -> &[u8] {
         let buf = &self.buffer[self.idx..self.idx + length];
-        self.idx = self.idx + length;
+        self.idx += length;
         buf
     }
 
@@ -64,13 +63,13 @@ impl<'r, T: Read> Read for Reader<'r, T> {
                 // Final write from buffer
                 let data = self.buf_read(length - written);
                 let wrote = buf.write(data)?;
-                written = written + wrote;
+                written += wrote;
                 break;
             } else {
                 // Write the remaining data, and refresh buffer
                 let data = self.buf_read(remaining);
                 let wrote = buf.write(data)?;
-                written = written + wrote;
+                written += wrote;
 
                 if self.refill()? == 0 {
                     break;
@@ -103,7 +102,7 @@ impl<'w, T: Write> Writer<'w, T> {
     fn buf_write(&mut self, bytes: &[u8]) -> usize {
         let slice = &mut self.buffer[self.length..self.length + bytes.len()];
         slice.copy_from_slice(bytes);
-        self.length = self.length + bytes.len();
+        self.length += bytes.len();
         bytes.len()
     }
 
@@ -111,7 +110,7 @@ impl<'w, T: Write> Writer<'w, T> {
     fn buf_flush(&mut self) -> Result<()> {
         self.endianness.swap(&mut self.buffer[..self.length]);
         let data = &self.buffer[..self.length];
-        self.writer.write(data)?;
+        self.writer.write_all(data)?;
         self.length = 0;
         Ok(())
     }
@@ -131,14 +130,14 @@ impl<'w, T: Write> Write for Writer<'w, T> {
             if remaining >= (buf.len() - idx) {
                 // If buffer has enough space, write all to it
                 let wrote = self.buf_write(&buf[idx..]);
-                written = written + wrote;
+                written += wrote;
                 break;
             } else {
                 // let slice = &buf[idx..idx + remaining];
                 let wrote = self.buf_write(&buf[idx..idx + remaining]);
                 self.buf_flush()?;
-                written = written + wrote;
-                idx = idx + remaining;
+                written += wrote;
+                idx += remaining;
             }
         }
 

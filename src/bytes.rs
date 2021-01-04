@@ -44,9 +44,7 @@ impl Swap for Mixed {
         let swaps = buf.len() / 2;
         for i in 0..swaps {
             let idx = i*2;
-            let temp = buf[idx];
-            buf[idx] = buf[idx+1];
-            buf[idx+1] = temp;
+            buf.swap(idx, idx+1);
         }
     }
 }

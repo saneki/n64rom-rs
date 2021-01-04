@@ -13,7 +13,7 @@ pub enum FileSize {
 impl FileSize {
     pub fn from(length: u64, unit: u64) -> Self {
         let result = fdivide(length, unit);
-        if result.trunc() == result {
+        if (result.trunc() - result).abs() < f64::EPSILON {
             Self::Int(result as u64)
         } else {
             Self::Float(result)

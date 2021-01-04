@@ -15,8 +15,8 @@ pub const PROGRAM_SIZE: usize = 1024 * 1024;
 pub enum IPL3Error {
     #[error("{0}")]
     IOError(#[from] io::Error),
-    #[error("Unable to read IPL3: {0}")]
-    IPL3ReadError(String),
+    #[error("Unable to read IPL3: Expected file size {}, found {0}", IPL_SIZE)]
+    FileSizeError(u64),
 }
 
 #[derive(Clone, Copy)]
@@ -82,10 +82,7 @@ impl IPL3 {
         let metadata = f.metadata()?;
         let len = metadata.len();
         if len as usize != IPL_SIZE {
-            return Err(IPL3Error::IPL3ReadError(format!(
-                "Expected file size {}, found {}",
-                IPL_SIZE, len
-            )))
+            return Err(IPL3Error::FileSizeError(len))
         }
 
         let ipl3 = Self::read(&mut f)?;

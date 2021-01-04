@@ -22,7 +22,7 @@ pub type LE = LittleEndian;
 
 impl Swap for LittleEndian {
     fn swap(buf: &mut [u8]) {
-        assert_eq!(buf.len() % 4, 0, "Byte swapping requires a multiple of two");
+        assert_eq!(buf.len() % 4, 0, "LittleEndian byte swapping requires a multiple of 4");
         let swaps = buf.len() / 4;
         for i in 0..swaps {
             let idx = i*4;
@@ -40,7 +40,7 @@ pub type MX = Mixed;
 
 impl Swap for Mixed {
     fn swap(buf: &mut [u8]) {
-        assert_eq!(buf.len() % 2, 0, "Byte swapping requires a multiple of two");
+        assert_eq!(buf.len() % 2, 0, "Mixed byte swapping requires a multiple of 2");
         let swaps = buf.len() / 2;
         for i in 0..swaps {
             let idx = i*2;

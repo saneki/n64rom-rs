@@ -6,7 +6,6 @@ use std::process;
 use thiserror::Error;
 
 use n64rom::bytes::Endianness;
-use n64rom::header;
 use n64rom::io::Writer;
 use n64rom::rom::Rom;
 use n64rom::util::{FileSize, MEBIBYTE};
@@ -18,7 +17,7 @@ enum Error {
     CRCError(u32, u32),
     /// Error parsing Header.
     #[error("{0}")]
-    HeaderError(#[from] header::HeaderError),
+    HeaderError(#[from] n64rom::header::Error),
     /// IO error.
     #[error("{0}")]
     IOError(#[from] io::Error),

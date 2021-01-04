@@ -3,7 +3,7 @@ use std::io::{self, Read, Write};
 use thiserror::Error;
 
 use crate::bytes::Endianness;
-use crate::header::{Header, HeaderError, HEADER_SIZE};
+use crate::header::{Header, HEADER_SIZE};
 use crate::io::{Reader, Writer};
 use crate::ipl3::{IPL3, IPL_SIZE};
 use crate::util::{FileSize, MEBIBYTE};
@@ -12,11 +12,11 @@ use crate::util::{FileSize, MEBIBYTE};
 pub const HEAD_SIZE: usize = HEADER_SIZE + IPL_SIZE;
 
 #[derive(Debug, Error)]
-pub enum RomError {
+pub enum Error {
     #[error("{0}")]
     IOError(#[from] io::Error),
     #[error("{0}")]
-    HeaderError(#[from] HeaderError),
+    HeaderError(#[from] crate::header::Error),
     #[error("Unsupported endianness for this operation: {0}")]
     UnsupportedEndianness(Endianness),
 }
@@ -87,7 +87,7 @@ impl Rom {
     }
 
     /// Construct from a raw image without copying. Requires image data to be in big-endian format.
-    pub fn from_image(image: Vec<u8>) -> Result<Self, RomError> {
+    pub fn from_image(image: Vec<u8>) -> Result<Self, Error> {
         let mut head = &image[..HEAD_SIZE];
         // Read header & infer endianness.
         let (header, order) = Header::read(&mut head)?;
@@ -95,7 +95,7 @@ impl Rom {
             let ipl3 = IPL3::read(&mut head)?;
             Ok(Rom::from(header, ipl3, image, order))
         } else {
-            Err(RomError::UnsupportedEndianness(order))
+            Err(Error::UnsupportedEndianness(order))
         }
     }
 
@@ -123,12 +123,12 @@ impl Rom {
     }
 
     /// Read Rom with all data.
-    pub fn read<T: Read>(mut reader: &mut T) -> Result<Self, HeaderError> {
+    pub fn read<T: Read>(mut reader: &mut T) -> Result<Self, crate::header::Error> {
         Self::read_with_body(&mut reader, true)
     }
 
     /// Read Rom.
-    pub fn read_with_body<T: Read>(mut reader: &mut T, read_body: bool) -> Result<Self, HeaderError> {
+    pub fn read_with_body<T: Read>(mut reader: &mut T, read_body: bool) -> Result<Self, crate::header::Error> {
         // Read header & infer endianness
         let (header, order) = Header::read(&mut reader)?;
 

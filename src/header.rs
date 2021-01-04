@@ -14,7 +14,7 @@ pub const HEADER_SIZE: usize = 0x40;
 pub const MAGIC_SIZE: usize = 4;
 
 #[derive(Debug, Error)]
-pub enum HeaderError {
+pub enum Error {
     #[error("{0}")]
     IOError(#[from] io::Error),
     #[error("Unknown byte order from magic ({0:#08X})")]
@@ -39,7 +39,7 @@ impl fmt::Display for Magic {
             Ok(Endianness::Big) => write!(f, "Big Endian"),
             Ok(Endianness::Little) => write!(f, "Little Endian"),
             Ok(Endianness::Mixed) => write!(f, "Mixed Endian"),
-            Err(HeaderError::UnknownByteOrder(val)) => {
+            Err(Error::UnknownByteOrder(val)) => {
                 write!(f, "Unknown (0x{:08X})", val)
             }
             _ => write!(f, "Unknown"),
@@ -51,14 +51,14 @@ impl Magic {
     /// Infer the byte order (endianness) of the following data.
     ///
     /// If Little or Mixed endianness, will need to read properly.
-    pub fn infer_endianness(&self) -> Result<Endianness, HeaderError>
+    pub fn infer_endianness(&self) -> Result<Endianness, Error>
     {
         let value = self.to_u32();
         match value {
             0x8037_1240 => Ok(Endianness::Big),
             0x4012_3780 => Ok(Endianness::Little),
             0x3780_4012 => Ok(Endianness::Mixed),
-            _ => Err(HeaderError::UnknownByteOrder(value)),
+            _ => Err(Error::UnknownByteOrder(value)),
         }
     }
 
@@ -140,12 +140,12 @@ impl Header {
         (self.crc1, self.crc2)
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<(Self, Endianness), HeaderError> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<(Self, Endianness), Error> {
         let mut cursor = Cursor::new(&bytes);
         Self::read(&mut cursor)
     }
 
-    pub fn read<T: Read>(reader: &'_ mut T) -> Result<(Self, Endianness), HeaderError> {
+    pub fn read<T: Read>(reader: &'_ mut T) -> Result<(Self, Endianness), Error> {
         let mut buf = [0u8; HEADER_SIZE];
         reader.read_exact(&mut buf)?;
         let buf = buf;

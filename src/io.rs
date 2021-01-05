@@ -1,6 +1,7 @@
 use std::io::{Read, Result, Write};
 
 use crate::bytes::Endianness;
+use crate::convert;
 
 const BUFFER_SIZE: usize = 1024 * 16;
 
@@ -36,7 +37,7 @@ impl<'r, T: Read> Reader<'r, T> {
     /// Refill the contents of the buffer and reset the index to 0.
     fn refill(&mut self) -> Result<usize> {
         let length = self.reader.read(&mut *self.buffer)?;
-        self.endianness.swap(&mut self.buffer[..length]);
+        convert::convert(&mut self.buffer[..length], self.endianness, Endianness::Big).unwrap();
         self.idx = 0;
         self.length = length;
         Ok(length)
@@ -108,7 +109,7 @@ impl<'w, T: Write> Writer<'w, T> {
 
     /// Flush buffer without flushing the underlying writer.
     fn buf_flush(&mut self) -> Result<()> {
-        self.endianness.swap(&mut self.buffer[..self.length]);
+        convert::convert(&mut self.buffer[..self.length], self.endianness, Endianness::Big).unwrap();
         let data = &self.buffer[..self.length];
         self.writer.write_all(data)?;
         self.length = 0;

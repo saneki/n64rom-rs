@@ -2,7 +2,6 @@ use std::fmt;
 use std::io::{self, Read, Write};
 use thiserror::Error;
 
-use crate::bytes::Endianness;
 use crate::header::{Header, HEADER_SIZE};
 use crate::io::{Reader, Writer};
 use crate::ipl3::{IPL3, IPL_SIZE};
@@ -22,6 +21,24 @@ pub enum Error {
     HeaderError(#[from] crate::header::Error),
     #[error("Unsupported endianness for this operation: {0}")]
     UnsupportedEndianness(Endianness),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+/// Convenience wrapper enum around the separate Swap endianness enums.
+pub enum Endianness {
+    Big,
+    Little,
+    Mixed,
+}
+
+impl fmt::Display for Endianness {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Big => write!(f, "Big Endian"),
+            Self::Little => write!(f, "Little Endian"),
+            Self::Mixed => write!(f, "Mixed"),
+        }
+    }
 }
 
 #[derive(Clone)]

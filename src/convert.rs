@@ -3,8 +3,7 @@ use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use thiserror::Error;
 
-use crate::bytes::Endianness;
-use crate::rom::Rom;
+use crate::rom::{Endianness, Rom};
 
 #[derive(Debug, Error)]
 pub enum Error {

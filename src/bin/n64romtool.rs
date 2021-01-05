@@ -5,10 +5,9 @@ use std::path::Path;
 use std::process;
 use thiserror::Error;
 
-use n64rom::bytes::Endianness;
 use n64rom::convert::{self, ConvertStatus};
 use n64rom::io::Writer;
-use n64rom::rom::Rom;
+use n64rom::rom::{Endianness, Rom};
 use n64rom::util::{FileSize, MEBIBYTE};
 
 #[derive(Debug, Error)]

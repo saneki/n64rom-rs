@@ -1,7 +1,7 @@
 use std::io::{Read, Result, Write};
 
-use crate::bytes::Endianness;
 use crate::convert;
+use crate::rom::Endianness;
 
 const BUFFER_SIZE: usize = 1024 * 16;
 

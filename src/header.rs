@@ -23,10 +23,14 @@ pub enum Error {
 ///
 /// This value is often used to infer the byte order of the rom data.
 pub struct Magic {
-    device_latency: u8,             // PI_BSD_DOM1_LAT_REG
-    device_rw_pulse_width: u8,      // PI_BSD_DOM1_PWD_REG
-    device_page_size: u8,           // PI_BSD_DOM1_PGS_REG
-    device_rw_release_duration: u8, // PI_BSD_DOM1_RLS_REG
+    /// Register: `PI_BSD_DOM1_LAT_REG`.
+    device_latency: u8,
+    /// Register: `PI_BSD_DOM1_PWD_REG`.
+    device_rw_pulse_width: u8,
+    /// Register: `PI_BSD_DOM1_PGS_REG`.
+    device_page_size: u8,
+    /// Register: `PI_BSD_DOM1_RLS_REG`.
+    device_rw_release_duration: u8,
 }
 
 impl fmt::Display for Magic {
@@ -110,9 +114,12 @@ impl Magic {
 pub struct Header {
     // 0x00
     magic: Magic,
-    clock_rate: u32,                // Unused by IPL and OS
-    entry_point: u32,               // Executable start address/entry point
-    release: u32,                   // Unused by IPL and OS
+    /// Unused by IPL and OS.
+    clock_rate: u32,
+    /// Executable start address/entry point.
+    entry_point: u32,
+    /// Unused by IPL and OS.
+    release: u32,
 
     // 0x10
     crate crc1: u32,

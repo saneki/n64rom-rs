@@ -175,7 +175,7 @@ pub fn convert_rom_file(in_file: &mut File, out_file: &mut File, target: Endiann
 }
 
 /// Convenience function to convert a rom file at a given `Path` to the specified `Endianness`.
-pub fn convert_rom_path(in_path: &Path, out_path: &Path, target: Endianness) -> Result<(ConvertStatus, usize), Error> {
+pub fn convert_rom_path(in_path: impl AsRef<Path>, out_path: impl AsRef<Path>, target: Endianness) -> Result<(ConvertStatus, usize), Error> {
     let mut in_file = OpenOptions::new().read(true).open(in_path)?;
     let mut out_file = OpenOptions::new().write(true).create(true).truncate(true).open(out_path)?;
     convert_rom_file(&mut in_file, &mut out_file, target)

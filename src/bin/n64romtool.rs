@@ -126,7 +126,7 @@ fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
                 _ => unreachable!(),
             };
             // Perform rom convert.
-            let (result, _) = convert::convert_rom_path(&Path::new(&input), &Path::new(&output), order)?;
+            let (result, _) = convert::convert_rom_path(&input, &output, order)?;
             if matches!(result, ConvertStatus::AlreadyConverted) {
                 println!("Rom file is already in {} byte order.", order);
             } else {

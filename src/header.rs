@@ -146,7 +146,7 @@ impl Header {
     }
 
     pub fn read<T: Read>(reader: &'_ mut T) -> Result<(Self, Endianness), Error> {
-        let mut buf = [0u8; HEADER_SIZE];
+        let mut buf = [0; HEADER_SIZE];
         reader.read_exact(&mut buf)?;
         let buf = buf;
 
@@ -161,7 +161,7 @@ impl Header {
 
     /// Read without checking for endianness.
     pub fn read_raw<T: Read>(reader: &mut T) -> io::Result<Self> {
-        let mut magic = [0u8; 4];
+        let mut magic = [0; 4];
         reader.read_exact(&mut magic)?;
         let magic = Magic::from(&magic);
 
@@ -172,21 +172,21 @@ impl Header {
         let crc1 = reader.read_u32::<BigEndian>()?;
         let crc2 = reader.read_u32::<BigEndian>()?;
 
-        let mut _reserved_1 = [0u8; 8];
+        let mut _reserved_1 = [0; 8];
         reader.read_exact(&mut _reserved_1)?;
         let _reserved_1 = _reserved_1;
 
-        let mut name = [0u8; 20];
+        let mut name = [0; 20];
         reader.read_exact(&mut name)?;
         let name = name;
 
-        let mut _reserved_2 = [0u8; 7];
+        let mut _reserved_2 = [0; 7];
         reader.read_exact(&mut _reserved_2)?;
         let _reserved_2 = _reserved_2;
 
         let manufacturer = reader.read_u8()?;
 
-        let mut cart_id = [0u8; 2];
+        let mut cart_id = [0; 2];
         reader.read_exact(&mut cart_id)?;
         let cart_id = cart_id;
 
@@ -229,7 +229,7 @@ impl Header {
     }
 
     pub fn region_id(&self) -> Vec<u8> {
-        let mut region_id = [0u8; 4];
+        let mut region_id = [0; 4];
         self.fill_region_id(&mut region_id);
         region_id.to_vec()
     }

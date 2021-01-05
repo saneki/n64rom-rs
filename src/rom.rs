@@ -11,6 +11,9 @@ use crate::util::{FileSize, MEBIBYTE};
 /// Total size of rom header and IPL3. This will be the file offset where data begins.
 pub const HEAD_SIZE: usize = HEADER_SIZE + IPL_SIZE;
 
+/// Maximum expected rom size (64 MiB).
+pub const MAX_SIZE: usize = 1024 * 1024 * 64;
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("{0}")]

@@ -9,6 +9,7 @@
 extern crate static_assertions;
 
 pub mod bytes;
+pub mod convert;
 pub mod header;
 pub mod io;
 pub mod ipl3;

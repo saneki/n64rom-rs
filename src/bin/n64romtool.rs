@@ -6,12 +6,15 @@ use std::process;
 use thiserror::Error;
 
 use n64rom::bytes::Endianness;
+use n64rom::convert::{self, ConvertStatus};
 use n64rom::io::Writer;
 use n64rom::rom::Rom;
 use n64rom::util::{FileSize, MEBIBYTE};
 
 #[derive(Debug, Error)]
 enum Error {
+    #[error("{0}")]
+    ConvertError(#[from] n64rom::convert::Error),
     /// Invalid CRC values.
     #[error("Bad CRC values, expected: ({0:#08X}, {1:#08X})")]
     CRCError(u32, u32),
@@ -114,26 +117,22 @@ fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
             }
         }
         ("convert", Some(matches)) => {
-            let path = matches.value_of("input").unwrap();
-            let (rom, _) = load_rom(&path, true)?;
-
+            // Get variables from arguments.
+            let input = matches.value_of("input").unwrap();
+            let output = matches.value_of("output").unwrap();
             let order = match matches.value_of("order").unwrap() {
                 "big" => Endianness::Big,
                 "little" => Endianness::Little,
                 "mixed" => Endianness::Mixed,
                 _ => unreachable!(),
             };
-
-            // Check if the rom file is already in this byte order
-            if rom.order() == &order {
+            // Perform rom convert.
+            let (result, _) = convert::convert_rom_path(&Path::new(&input), &Path::new(&output), order)?;
+            if matches!(result, ConvertStatus::AlreadyConverted) {
                 println!("Rom file is already in {} byte order.", order);
-                return Ok(());
+            } else {
+                println!("Done!");
             }
-
-            let out_path = matches.value_of("output").unwrap();
-            let mut file = File::create(out_path)?;
-            rom.write(&mut file, Some(&order))?;
-            println!("Done!");
             Ok(())
         }
         ("correct", Some(matches)) => {

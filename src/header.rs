@@ -18,7 +18,7 @@ pub enum Error {
     UnknownByteOrder(u32),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 /// Represents the initial four bytes of the rom header.
 ///
 /// This value is often used to infer the byte order of the rom data.
@@ -76,6 +76,15 @@ impl Magic {
             device_rw_pulse_width: bytes[1],
             device_page_size: bytes[2],
             device_rw_release_duration: bytes[3],
+        }
+    }
+
+    pub fn new() -> Self {
+        Self {
+            device_latency: 128,
+            device_rw_pulse_width: 55,
+            device_page_size: 18,
+            device_rw_release_duration: 64,
         }
     }
 
@@ -265,12 +274,7 @@ impl Header {
         cart_id.copy_from_slice(cart_id_str);
         let cart_id = cart_id;
 
-        let magic = Magic {
-            device_latency: 128,
-            device_rw_pulse_width: 55,
-            device_page_size: 18,
-            device_rw_release_duration: 64,
-        };
+        let magic = Magic::new();
 
         Self {
             // 0x00

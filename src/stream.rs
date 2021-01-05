@@ -3,13 +3,15 @@ use std::io::{Read, Result, Write};
 use crate::convert;
 use crate::rom::Endianness;
 
+/// Default buffer size to use for `Reader` and `Writer`.
 const BUFFER_SIZE: usize = 1024 * 16;
 
-// Assert buffer size is divisible by 4.
+// Assert default buffer size is divisible by 4.
 const_assert_eq!(BUFFER_SIZE % 4, 0);
 
+/// Reader for translating data from a base `Endianness` into `Endianness::Big` format.
 pub struct Reader<'r, T: Read> {
-    buffer: Box<[u8; BUFFER_SIZE]>,
+    buffer: Vec<u8>,
     endianness: Endianness,
     idx: usize,
     length: usize,
@@ -17,10 +19,14 @@ pub struct Reader<'r, T: Read> {
 }
 
 impl<'r, T: Read> Reader<'r, T> {
-    pub fn from(reader: &'r mut T, endianness: &Endianness) -> Self {
+    pub fn from(reader: &'r mut T, endianness: Endianness) -> Self {
+        Self::with_buffer_size(reader, endianness, BUFFER_SIZE)
+    }
+
+    pub fn with_buffer_size(reader: &'r mut T, endianness: Endianness, capacity: usize) -> Self {
         Self {
-            buffer: box[0; BUFFER_SIZE],
-            endianness: *endianness,
+            buffer: Vec::with_capacity(capacity),
+            endianness,
             idx: 0,
             length: 0,
             reader,
@@ -82,19 +88,23 @@ impl<'r, T: Read> Read for Reader<'r, T> {
     }
 }
 
-/// Writer.
+/// Writer for translating data from `Endianness::Big` into a base `Endianness` format.
 pub struct Writer<'w, T: Write> {
-    buffer: Box<[u8; BUFFER_SIZE]>,
+    buffer: Vec<u8>,
     endianness: Endianness,
     length: usize,
     writer: &'w mut T,
 }
 
 impl<'w, T: Write> Writer<'w, T> {
-    pub fn from(writer: &'w mut T, endianness: &Endianness) -> Self {
+    pub fn from(writer: &'w mut T, endianness: Endianness) -> Self {
+        Self::with_buffer_size(writer, endianness, BUFFER_SIZE)
+    }
+
+    pub fn with_buffer_size(writer: &'w mut T, endianness: Endianness, capacity: usize) -> Self {
         Self {
-            buffer: box[0; BUFFER_SIZE],
-            endianness: *endianness,
+            buffer: Vec::with_capacity(capacity),
+            endianness,
             length: 0,
             writer,
         }

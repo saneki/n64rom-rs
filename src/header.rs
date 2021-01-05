@@ -154,7 +154,7 @@ impl Header {
         let order = magic.infer_endianness()?;
 
         let mut cursor = Cursor::new(buf.to_vec());
-        let mut reader = Reader::from(&mut cursor, &order);
+        let mut reader = Reader::from(&mut cursor, order);
         let header = Self::read_raw(&mut reader)?;
         Ok((header, order))
     }

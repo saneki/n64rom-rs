@@ -153,7 +153,7 @@ impl Rom {
         let (header, order) = Header::read(&mut reader)?;
 
         // Create new reader based on endianness, read remaining with it
-        let mut reader = Reader::from(&mut reader, &order);
+        let mut reader = Reader::from(&mut reader, order);
         let ipl3 = IPL3::read(&mut reader)?;
 
         // Read rom data into buffer.
@@ -185,7 +185,7 @@ impl Rom {
         };
 
         // Wrap in writer that respects chosen byte order
-        let mut writer = Writer::from(writer, order);
+        let mut writer = Writer::from(writer, *order);
 
         // Write header, IPL3 and data
         let mut written = self.header.write(&mut writer)?;

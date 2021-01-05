@@ -145,7 +145,7 @@ fn main_with_args(matches: &ArgMatches) -> Result<(), Error> {
                 file.seek(SeekFrom::Start(0))?;
 
                 // Use a writer that respects the original byte order
-                let mut writer = Writer::from(&mut file, &rom.order());
+                let mut writer = Writer::from(&mut file, *rom.order());
                 rom.header.write(&mut writer)?;
                 writer.flush()?;
 

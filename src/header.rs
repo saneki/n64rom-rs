@@ -10,9 +10,6 @@ use crate::ipl3::IPL3;
 use crate::rom::Endianness;
 use crate::stream::Reader;
 
-pub const HEADER_SIZE: usize = 0x40;
-pub const MAGIC_SIZE: usize = 4;
-
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("{0}")]
@@ -48,6 +45,8 @@ impl fmt::Display for Magic {
 }
 
 impl Magic {
+    pub const SIZE: usize = 4;
+
     /// Infer the byte order (endianness) of the following data.
     ///
     /// If Little or Mixed endianness, will need to read properly.
@@ -136,6 +135,8 @@ impl fmt::Display for Header {
 }
 
 impl Header {
+    pub const SIZE: usize = 0x40;
+
     pub fn crcs(&self) -> (u32, u32) {
         (self.crc1, self.crc2)
     }
@@ -146,11 +147,11 @@ impl Header {
     }
 
     pub fn read<T: Read>(reader: &'_ mut T) -> Result<(Self, Endianness), Error> {
-        let mut buf = [0; HEADER_SIZE];
+        let mut buf = [0; Header::SIZE];
         reader.read_exact(&mut buf)?;
         let buf = buf;
 
-        let magic = Magic::from(&buf[..MAGIC_SIZE]);
+        let magic = Magic::from(&buf[..Magic::SIZE]);
         let order = magic.infer_endianness()?;
 
         let mut cursor = Cursor::new(buf.to_vec());

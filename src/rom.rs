@@ -3,8 +3,8 @@ use std::io::{self, Read, Write};
 use thiserror::Error;
 
 use crate::header::{Header, HEADER_SIZE};
-use crate::io::{Reader, Writer};
 use crate::ipl3::{IPL3, IPL_SIZE};
+use crate::stream::{Reader, Writer};
 use crate::util::{FileSize, MEBIBYTE};
 
 /// Total size of rom header and IPL3. This will be the file offset where data begins.

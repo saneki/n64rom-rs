@@ -10,7 +10,7 @@ extern crate static_assertions;
 
 pub mod convert;
 pub mod header;
-pub mod io;
 pub mod ipl3;
 pub mod rom;
+pub mod stream;
 pub mod util;

@@ -6,9 +6,9 @@ use std::iter::FromIterator;
 use std::str::{self, Utf8Error};
 use thiserror::Error;
 
-use crate::io::Reader;
 use crate::ipl3::IPL3;
 use crate::rom::Endianness;
+use crate::stream::Reader;
 
 pub const HEADER_SIZE: usize = 0x40;
 pub const MAGIC_SIZE: usize = 4;

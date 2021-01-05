@@ -109,7 +109,7 @@ impl<'w, T: Write> Writer<'w, T> {
 
     /// Flush buffer without flushing the underlying writer.
     fn buf_flush(&mut self) -> Result<()> {
-        convert::convert(&mut self.buffer[..self.length], self.endianness, Endianness::Big).unwrap();
+        convert::convert(&mut self.buffer[..self.length], Endianness::Big, self.endianness).unwrap();
         let data = &self.buffer[..self.length];
         self.writer.write_all(data)?;
         self.length = 0;

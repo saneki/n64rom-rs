@@ -139,7 +139,7 @@ pub fn convert(buf: &mut [u8], current: Endianness, target: Endianness) -> Resul
 
 /// Convert `Rom` data to a target `Endianness`.
 pub fn convert_rom(rom: &mut Rom, target: Endianness) -> Result<ConvertStatus, Error> {
-    let order = *rom.order();
+    let order = rom.order();
     convert(&mut rom.image, order, target)
 }
 

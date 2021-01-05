@@ -138,8 +138,8 @@ impl Rom {
         &mut self.image[..]
     }
 
-    pub fn order(&self) -> &Endianness {
-        &self.order
+    pub fn order(&self) -> Endianness {
+        self.order
     }
 
     /// Read Rom with all data.

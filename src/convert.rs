@@ -3,6 +3,7 @@ use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use thiserror::Error;
 
+use crate::header::Magic;
 use crate::rom::{Endianness, Rom};
 
 #[derive(Debug, Error)]
@@ -149,8 +150,7 @@ pub fn convert_rom_file(in_file: &mut File, out_file: &mut File, target: Endiann
     in_file.seek(SeekFrom::Start(0))?;
     let mut magic_bytes: [u8; 4] = [0; 4];
     in_file.read_exact(&mut magic_bytes)?;
-    let magic = crate::header::Magic::from(&magic_bytes);
-    let order = magic.infer_endianness()?;
+    let order = Magic::infer_byte_order(&magic_bytes)?;
 
     // Determine filesize in attempt to prevent buffer from re-allocating.
     let filesize = std::cmp::min(in_file.metadata()?.len(), crate::rom::MAX_SIZE as u64);

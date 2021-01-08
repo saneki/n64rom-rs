@@ -110,7 +110,7 @@ impl Rom {
     pub fn from_image(image: Vec<u8>) -> Result<Self, Error> {
         let mut head = &image[..HEAD_SIZE];
         // Read header & infer endianness.
-        let (header, order) = Header::read(&mut head)?;
+        let (header, order) = Header::read_ordered(&mut head)?;
         if order == Endianness::Big {
             let ipl3 = IPL3::read(&mut head)?;
             Ok(Rom::from(header, ipl3, image, order))
@@ -150,7 +150,7 @@ impl Rom {
     /// Read Rom.
     pub fn read_with_body<T: Read>(mut reader: &mut T, read_body: bool) -> Result<Self, crate::header::Error> {
         // Read header & infer endianness
-        let (header, order) = Header::read(&mut reader)?;
+        let (header, order) = Header::read_ordered(&mut reader)?;
 
         // Create new reader based on endianness, read remaining with it
         let mut reader = Reader::from(&mut reader, order);
@@ -158,7 +158,7 @@ impl Rom {
 
         // Read rom data into buffer.
         let mut image = Vec::new();
-        image.extend(header.to_vec());
+        header.write(&mut image)?;
         image.extend(ipl3.get_ipl());
         // Read remaining data if specified.
         if read_body {

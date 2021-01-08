@@ -25,7 +25,7 @@ impl<'r, T: Read> Reader<'r, T> {
 
     pub fn with_buffer_size(reader: &'r mut T, endianness: Endianness, capacity: usize) -> Self {
         Self {
-            buffer: Vec::with_capacity(capacity),
+            buffer: vec![0; capacity],
             endianness,
             idx: 0,
             length: 0,
@@ -103,7 +103,7 @@ impl<'w, T: Write> Writer<'w, T> {
 
     pub fn with_buffer_size(writer: &'w mut T, endianness: Endianness, capacity: usize) -> Self {
         Self {
-            buffer: Vec::with_capacity(capacity),
+            buffer: vec![0; capacity],
             endianness,
             length: 0,
             writer,

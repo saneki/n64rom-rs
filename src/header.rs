@@ -105,6 +105,39 @@ impl Magic {
     }
 }
 
+/// Media format of rom.
+#[derive(Clone, Copy, Default)]
+pub struct Media([u8; 4]);
+
+impl Media {
+    /// Get all values as `char` tuple.
+    pub fn chars(&self) -> (char, char, char, char) {
+        (self.0[0] as char, self.0[1] as char, self.0[2] as char, self.0[3] as char)
+    }
+
+    /// Get all values as `u8` tuple.
+    pub fn values(&self) -> (u8, u8, u8, u8) {
+        (self.0[0], self.0[1], self.0[2], self.0[3])
+    }
+
+    /// Get slice as string.
+    pub fn as_str(&self) -> Result<&str, Utf8Error> {
+        str::from_utf8(&self.0)
+    }
+}
+
+impl AsMut<[u8; 4]> for Media {
+    fn as_mut(&mut self) -> &mut [u8; 4] {
+        &mut self.0
+    }
+}
+
+impl AsRef<[u8; 4]> for Media {
+    fn as_ref(&self) -> &[u8; 4] {
+        &self.0
+    }
+}
+
 #[derive(Clone, Copy, Default)]
 pub struct Header {
     // Magic number and PI registers.
@@ -124,41 +157,26 @@ pub struct Header {
     name: [u8; 20],
     _reserved_2: [u8; 7],
     /// Region identifier.
-    region: [u8; 4],
+    media: Media,
     _reserved_3: u8,
 }
 
 impl fmt::Display for Header {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = self.name().unwrap_or("<???>").trim();
-        let region = self.region_str().unwrap_or("????");
+        let media_str = self.media.as_str().unwrap_or("????");
+        let (rom_type, cart_id_1, cart_id_2, region_id) = self.media.chars();
         write!(formatter, "N64 ROM Header: {}\n", name)?;
         write!(formatter, "  Checksums: (0x{:08X}, 0x{:08X})\n", self.crc1, self.crc2)?;
-        write!(formatter, "  Region: {}\n", region)?;
-        write!(formatter, "    Manufacturer: {}\n", self.region[0] as char)?;
-        write!(formatter, "    Cart ID:      {}{}\n", self.region[1] as char, self.region[2] as char)?;
-        write!(formatter, "    Region Code:  {}", self.region[3] as char)
+        write!(formatter, "  Region: {}\n", media_str)?;
+        write!(formatter, "    Manufacturer: {}\n", rom_type)?;
+        write!(formatter, "    Cart ID:      {}{}\n", cart_id_1, cart_id_2)?;
+        write!(formatter, "    Region Code:  {}", region_id)
     }
 }
 
 impl Header {
     pub const SIZE: usize = 0x40;
-
-    pub fn manufacturer(&self) -> u8 {
-        self.region[0]
-    }
-
-    pub fn cart_id(&self) -> &[u8] {
-        &self.region[1..3]
-    }
-
-    pub fn region_code(&self) -> u8 {
-        self.region[3]
-    }
-
-    pub fn region_str(&self) -> Result<&str, Utf8Error> {
-        str::from_utf8(&self.region)
-    }
 
     pub fn crcs(&self) -> (u32, u32) {
         (self.crc1, self.crc2)
@@ -189,7 +207,7 @@ impl Header {
         reader.read_exact(&mut header._reserved_1)?;
         reader.read_exact(&mut header.name)?;
         reader.read_exact(&mut header._reserved_2)?;
-        reader.read_exact(&mut header.region)?;
+        reader.read_exact(header.media.as_mut())?;
         header._reserved_3 = reader.read_u8()?;
         Ok(header)
     }
@@ -198,7 +216,7 @@ impl Header {
         str::from_utf8(&self.name)
     }
 
-    pub fn new(entry_point: u32, name: &str, region: &[u8], program: &[u8], fs: &[u8], ipl3: &IPL3) -> Self {
+    pub fn new(entry_point: u32, name: &str, media: &[u8], program: &[u8], fs: &[u8], ipl3: &IPL3) -> Self {
         let mut header = Self::default();
         let (crc1, crc2) = ipl3.compute_crcs(program, fs);
         let name_bytes = &name.as_bytes()[..20];
@@ -209,7 +227,7 @@ impl Header {
         header.crc1 = crc1;
         header.crc2 = crc2;
         header.name.copy_from_slice(name_bytes);
-        header.region.copy_from_slice(&region[..4]);
+        header.media.as_mut().copy_from_slice(&media[..4]);
         header
     }
 
@@ -223,7 +241,7 @@ impl Header {
         writer.write_all(&self._reserved_1)?;
         writer.write_all(&self.name)?;
         writer.write_all(&self._reserved_2)?;
-        writer.write_all(&self.region)?;
+        writer.write_all(self.media.as_ref())?;
         writer.write_u8(self._reserved_3)?;
         Ok(Header::SIZE)
     }

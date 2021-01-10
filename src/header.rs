@@ -163,7 +163,7 @@ pub struct Header {
 
 impl fmt::Display for Header {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = self.name().unwrap_or("<???>").trim();
+        let name = self.name_str().unwrap_or("<???>").trim();
         let media_str = self.media.as_str().unwrap_or("????");
         let (rom_type, cart_id_1, cart_id_2, region_id) = self.media.chars();
         write!(formatter, "N64 ROM Header: {}\n", name)?;
@@ -178,8 +178,29 @@ impl fmt::Display for Header {
 impl Header {
     pub const SIZE: usize = 0x40;
 
+    /// Get CRC values.
     pub fn crcs(&self) -> (u32, u32) {
         (self.crc1, self.crc2)
+    }
+
+    /// Get magic number field.
+    pub fn magic(&self) -> &Magic {
+        &self.magic
+    }
+
+    /// Get media format field.
+    pub fn media(&self) -> &Media {
+        &self.media
+    }
+
+    /// Get rom name as bytes.
+    pub fn name(&self) -> &[u8; 20] {
+        &self.name
+    }
+
+    /// Get rom name decoded as UTF-8.
+    pub fn name_str(&self) -> Result<&str, Utf8Error> {
+        str::from_utf8(&self.name)
     }
 
     pub fn read_ordered<T: Read>(reader: &'_ mut T) -> Result<(Self, Endianness), Error> {
@@ -210,10 +231,6 @@ impl Header {
         reader.read_exact(header.media.as_mut())?;
         header._reserved_3 = reader.read_u8()?;
         Ok(header)
-    }
-
-    pub fn name(&self) -> Result<&str, Utf8Error> {
-        str::from_utf8(&self.name)
     }
 
     pub fn new(entry_point: u32, name: &str, media: &[u8], program: &[u8], fs: &[u8], ipl3: &IPL3) -> Self {

@@ -5,9 +5,9 @@ use std::io::prelude::*;
 use std::str::{self, Utf8Error};
 use thiserror::Error;
 
+use crate::convert;
 use crate::ipl3::IPL3;
 use crate::rom::Endianness;
-use crate::stream::Reader;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -220,13 +220,13 @@ impl Header {
     pub fn read_ordered<T: Read>(reader: &'_ mut T) -> Result<(Self, Endianness), Error> {
         let mut buf = [0; Header::SIZE];
         reader.read_exact(&mut buf)?;
-        let buf = buf;
-
-        // Infer byte order, and use byte-order-aware reader to read as big endian.
+        // Infer byte order and convert buffer to big endian.
         let order = Magic::infer_byte_order(&buf)?;
+        convert::convert(&mut buf, order, Endianness::Big).unwrap();
+        let buf = buf;
+        // Read Header from buffer.
         let mut cursor = Cursor::new(&buf);
-        let mut reader = Reader::with_buffer_size(&mut cursor, order, buf.len());
-        let header = Self::read(&mut reader)?;
+        let header = Self::read(&mut cursor)?;
         Ok((header, order))
     }
 

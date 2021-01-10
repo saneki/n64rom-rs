@@ -168,7 +168,7 @@ impl fmt::Display for Header {
         let media_str = self.media.as_str().unwrap_or("????");
         write!(formatter, "N64 ROM Header: {}\n", name)?;
         write!(formatter, "  Checksums: (0x{:08X}, 0x{:08X})\n", self.crc1, self.crc2)?;
-        write!(formatter, "  Media: {}", media_str)
+        write!(formatter, "  Media Format: {}", media_str)
     }
 }
 

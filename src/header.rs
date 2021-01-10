@@ -166,13 +166,9 @@ impl fmt::Display for Header {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = self.name_str().unwrap_or("<???>").trim();
         let media_str = self.media.as_str().unwrap_or("????");
-        let (rom_type, cart_id_1, cart_id_2, region_id) = self.media.chars();
         write!(formatter, "N64 ROM Header: {}\n", name)?;
         write!(formatter, "  Checksums: (0x{:08X}, 0x{:08X})\n", self.crc1, self.crc2)?;
-        write!(formatter, "  Region: {}\n", media_str)?;
-        write!(formatter, "    Manufacturer: {}\n", rom_type)?;
-        write!(formatter, "    Cart ID:      {}{}\n", cart_id_1, cart_id_2)?;
-        write!(formatter, "    Region Code:  {}", region_id)
+        write!(formatter, "  Media: {}", media_str)
     }
 }
 

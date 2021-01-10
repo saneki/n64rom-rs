@@ -84,24 +84,25 @@ impl Magic {
         magic
     }
 
-    pub fn read<T: Read>(reader: &'_ mut T) -> io::Result<Self> {
-        let mut magic = Self::new();
-        reader.read_exact(&mut magic.0)?;
-        Ok(magic)
-    }
-
     pub fn new() -> Self {
         Self([128, 55, 18, 64])
     }
 
-    /// Convert to 4 bytes.
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0
-    }
-
     /// Convert to a `u32` value.
     pub fn to_u32(&self) -> u32 {
-        self.as_bytes().read_u32::<BigEndian>().unwrap()
+        BigEndian::read_u32(self.as_ref())
+    }
+}
+
+impl AsMut<[u8; 4]> for Magic {
+    fn as_mut(&mut self) -> &mut [u8; 4] {
+        &mut self.0
+    }
+}
+
+impl AsRef<[u8; 4]> for Magic {
+    fn as_ref(&self) -> &[u8; 4] {
+        &self.0
     }
 }
 
@@ -219,7 +220,7 @@ impl Header {
     /// Read without checking for endianness.
     pub fn read<T: Read>(reader: &mut T) -> io::Result<Self> {
         let mut header = Header::default();
-        header.magic = Magic::read(reader)?;
+        reader.read_exact(header.magic.as_mut())?;
         header.clock_rate = reader.read_u32::<BigEndian>()?;
         header.entry_point = reader.read_u32::<BigEndian>()?;
         header.release = reader.read_u32::<BigEndian>()?;
@@ -249,7 +250,7 @@ impl Header {
     }
 
     pub fn write<T: Write>(&self, writer: &'_ mut T) -> io::Result<usize> {
-        writer.write_all(self.magic.as_bytes())?;
+        writer.write_all(self.magic.as_ref())?;
         writer.write_u32::<BigEndian>(self.clock_rate)?;
         writer.write_u32::<BigEndian>(self.entry_point)?;
         writer.write_u32::<BigEndian>(self.release)?;
